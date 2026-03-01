@@ -1,0 +1,3 @@
+{
+  "buildCommand": "npm run build:mcp && npm run build:frontend"
+}

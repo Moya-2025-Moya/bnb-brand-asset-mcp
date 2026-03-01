@@ -5,7 +5,7 @@ import { uiComponents } from "../data/ui-components.js";
 export function registerGetUIComponent(server: McpServer) {
   server.tool(
     "get_ui_component",
-    "Get BNB Chain branded React UI components (ConnectWallet, NetworkSwitcher). Returns ready-to-use TypeScript/React code with BNB Chain styling.",
+    `Returns ready-to-use BNB Chain branded React components. Use these instead of writing wallet connection or network switching logic from scratch. Components are pre-styled with BNB brand colors and require the CSS variables from get_brand_colors.`,
     {
       component: z
         .enum(["ConnectWallet", "NetworkSwitcher", "all"])
@@ -14,6 +14,10 @@ export function registerGetUIComponent(server: McpServer) {
     async ({ component }) => {
       const sections: string[] = [];
       sections.push("# BNB Chain UI Components\n");
+      sections.push("## INSTRUCTIONS");
+      sections.push("1. Save each component as its own file (e.g., `components/ConnectWallet.tsx`)");
+      sections.push("2. These components require BNB CSS variables — call `get_brand_colors` first and include the CSS variables in your global stylesheet");
+      sections.push("3. Do NOT modify the brand colors in these components\n");
 
       const components =
         component === "all"
@@ -39,14 +43,8 @@ export function registerGetUIComponent(server: McpServer) {
         sections.push(
           `- **Dependencies:** ${comp.dependencies.length > 0 ? comp.dependencies.join(", ") : "none"}`
         );
-        sections.push(`\n### Code\n\`\`\`tsx\n${comp.code}\n\`\`\`\n`);
+        sections.push(`\n### Code — save as \`components/${comp.name}.tsx\`\n\`\`\`tsx\n${comp.code}\n\`\`\`\n`);
       }
-
-      sections.push("## Usage Notes\n");
-      sections.push("- Components use BNB Chain CSS variables (--bnb-*) for theming");
-      sections.push("- Include the CSS variables from `get_brand_colors` tool for proper styling");
-      sections.push("- ConnectWallet requires `window.ethereum` (MetaMask or compatible wallet)");
-      sections.push("- Both components support light and dark themes automatically");
 
       return {
         content: [{ type: "text", text: sections.join("\n") }],
