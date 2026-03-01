@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80" fill="none">
+  <circle cx="40" cy="40" r="28" fill="#FCD535"/>
+  <path d="M40 20L33.6 26.4L36 28.8L40 24.8L44 28.8L46.4 26.4L40 20Z" fill="#181A20"/>
+  <path d="M20 40L22.4 37.6L24.8 40L22.4 42.4L20 40Z" fill="#181A20"/>
+  <path d="M40 60L33.6 53.6L36 51.2L40 55.2L44 51.2L46.4 53.6L40 60Z" fill="#181A20"/>
+  <path d="M55.2 40L57.6 37.6L60 40L57.6 42.4L55.2 40Z" fill="#181A20"/>
+  <path d="M42.8 40L40 37.2L37.2 40L40 42.8L42.8 40Z" fill="#181A20"/>
+  <text x="80" y="48" font-family="Space Grotesk, sans-serif" font-weight="700" font-size="28" fill="#EAECEF">BNB Chain</text>
+</svg>

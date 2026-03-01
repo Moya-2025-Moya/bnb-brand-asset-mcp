@@ -1,0 +1,14 @@
+{
+  "name": "bnb-brand-asset-mcp-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "build:mcp": "npm run build --workspace=bnb-dev-suite",
+    "build:frontend": "npm run build --workspace=frontend",
+    "dev:mcp": "npm run dev --workspace=bnb-dev-suite"
+  }
+}

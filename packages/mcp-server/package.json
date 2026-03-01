@@ -1,0 +1,40 @@
+{
+  "name": "bnb-dev-suite",
+  "version": "1.0.0",
+  "description": "BNB Chain Brand Asset MCP Server - Official brand colors, logos, contract templates, and UI components",
+  "type": "module",
+  "bin": {
+    "bnb-dev-suite": "./dist/index.js"
+  },
+  "main": "./dist/server.js",
+  "exports": {
+    ".": "./dist/server.js",
+    "./data": "./dist/data/index.js"
+  },
+  "files": [
+    "dist",
+    "src/assets"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "bnb",
+    "bnb-chain",
+    "mcp",
+    "brand-assets",
+    "web3",
+    "blockchain"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "@types/node": "^20.0.0"
+  }
+}
