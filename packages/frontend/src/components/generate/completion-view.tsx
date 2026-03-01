@@ -219,12 +219,7 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
     <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
 
       {/* ========== Section 1: Hero ========== */}
-      <section className="relative animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {/* BNB logo top-right */}
-        <div className="absolute top-0 right-0">
-          <Image src="/bnb-logo.svg" alt="BNB Chain" width={40} height={40} className="opacity-60" />
-        </div>
-
+      <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="text-center space-y-3">
           <h2 className="text-2xl font-bold">{analysis.projectName}</h2>
           <p className="text-sm text-muted-foreground">{analysis.typeDescription}</p>

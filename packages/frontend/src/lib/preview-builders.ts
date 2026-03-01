@@ -6,6 +6,16 @@ export interface GeneratedFile {
   language: string;
 }
 
+/** Escape HTML special characters to prevent XSS in template-built HTML. */
+export function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // Official BNB Chain brand colors from MCP data (brand-colors.ts)
 export const BNB_TAILWIND_CONFIG = `
 tailwind.config = {
@@ -113,22 +123,22 @@ export function buildHtmlPreview(content: string): string {
 export function buildSolidityPreview(content: string, filename: string): string {
   const contractName =
     content.match(/contract\s+(\w+)/)?.[1] || filename.replace(".sol", "");
-  const inherits = content.match(/contract\s+\w+\s+is\s+([^{]+)/)?.[1]?.trim() || "";
+  const inherits = escapeHtml(content.match(/contract\s+\w+\s+is\s+([^{]+)/)?.[1]?.trim() || "");
   const functions = [
     ...content.matchAll(/function\s+(\w+)\s*\(([^)]*)\)([^{]*)/g),
   ].map((m) => ({
-    name: m[1],
-    params: m[2],
-    modifiers: m[3].trim().replace(/\s+/g, " "),
+    name: escapeHtml(m[1]),
+    params: escapeHtml(m[2]),
+    modifiers: escapeHtml(m[3].trim().replace(/\s+/g, " ")),
   }));
   const events = [...content.matchAll(/event\s+(\w+)\s*\(([^)]*)\)/g)].map(
-    (m) => ({ name: m[1], params: m[2] })
+    (m) => ({ name: escapeHtml(m[1]), params: escapeHtml(m[2]) })
   );
   const stateVars = [
     ...content.matchAll(
       /^\s+(uint\w*|int\w*|address|bool|string|bytes\w*|mapping[^;]+)\s+(public\s+|private\s+|internal\s+)?(\w+)/gm
     ),
-  ].map((m) => ({ type: m[1], visibility: (m[2] || "").trim(), name: m[3] }));
+  ].map((m) => ({ type: escapeHtml(m[1]), visibility: escapeHtml((m[2] || "").trim()), name: escapeHtml(m[3]) }));
   const pragmaMatch = content.match(/pragma\s+solidity\s+([^;]+)/);
   const lineCount = content.split("\n").length;
 
@@ -157,7 +167,7 @@ export function buildSolidityPreview(content: string, filename: string): string 
           <div>
             <h1 class="text-xl font-bold text-bnb-text">${contractName}</h1>
             <div class="flex items-center gap-2 mt-0.5">
-              ${pragmaMatch ? `<span class="tag bg-bnb-yellow/10 text-bnb-yellow">Solidity ${pragmaMatch[1].trim()}</span>` : ""}
+              ${pragmaMatch ? `<span class="tag bg-bnb-yellow/10 text-bnb-yellow">Solidity ${escapeHtml(pragmaMatch[1].trim())}</span>` : ""}
               ${inherits ? `<span class="tag bg-purple-500/10 text-purple-400">${inherits}</span>` : ""}
             </div>
           </div>
@@ -266,7 +276,10 @@ export function buildMarkdownPreview(content: string): string {
     .replace(/\*(.+?)\*/g, "<em>$1</em>")
     .replace(
       /\[([^\]]+)\]\(([^)]+)\)/g,
-      '<a href="$2" class="text-bnb-yellow hover:text-bnb-light underline underline-offset-2 transition-colors">$1</a>'
+      (_match: string, text: string, url: string) => {
+        const safeUrl = /^https?:\/\//i.test(url) ? url : "#";
+        return `<a href="${escapeHtml(safeUrl)}" class="text-bnb-yellow hover:text-bnb-light underline underline-offset-2 transition-colors" rel="noopener noreferrer">${escapeHtml(text)}</a>`;
+      }
     )
     .replace(
       /^>\s*(.+)$/gm,
@@ -316,9 +329,9 @@ export function buildJsonPreview(content: string, filename: string): string {
   const isPackageJson = filename.endsWith("package.json");
 
   if (isPackageJson) {
-    const name = (parsed.name as string) || "package";
-    const version = (parsed.version as string) || "";
-    const description = (parsed.description as string) || "";
+    const name = escapeHtml((parsed.name as string) || "package");
+    const version = escapeHtml((parsed.version as string) || "");
+    const description = escapeHtml((parsed.description as string) || "");
     const deps = parsed.dependencies as Record<string, string> | undefined;
     const devDeps = parsed.devDependencies as Record<string, string> | undefined;
     const scripts = parsed.scripts as Record<string, string> | undefined;
@@ -364,8 +377,8 @@ export function buildJsonPreview(content: string, filename: string): string {
       <div class="space-y-1.5">
         ${Object.entries(scripts).map(([k, v]) => `
           <div class="flex items-center gap-3 py-2 px-3 rounded-lg bg-[#1E2329] font-mono text-xs">
-            <span class="text-bnb-yellow font-semibold">$ ${k}</span>
-            <span class="text-bnb-muted truncate">${v}</span>
+            <span class="text-bnb-yellow font-semibold">$ ${escapeHtml(k)}</span>
+            <span class="text-bnb-muted truncate">${escapeHtml(v)}</span>
           </div>`).join("")}
       </div>
     </div>` : ""}
@@ -376,7 +389,7 @@ export function buildJsonPreview(content: string, filename: string): string {
       <h3 class="text-xs font-semibold text-bnb-muted uppercase tracking-wider mb-3">Dependencies</h3>
       <div class="flex flex-wrap gap-1.5">
         ${Object.entries(deps).map(([k, v]) => `
-          <span class="stat-chip bg-bnb-success/8 text-bnb-success font-mono text-[11px] border border-bnb-success/10">${k} <span class="text-bnb-muted">${v}</span></span>
+          <span class="stat-chip bg-bnb-success/8 text-bnb-success font-mono text-[11px] border border-bnb-success/10">${escapeHtml(k)} <span class="text-bnb-muted">${escapeHtml(v)}</span></span>
         `).join("")}
       </div>
     </div>` : ""}
@@ -387,7 +400,7 @@ export function buildJsonPreview(content: string, filename: string): string {
       <h3 class="text-xs font-semibold text-bnb-muted uppercase tracking-wider mb-3">Dev Dependencies</h3>
       <div class="flex flex-wrap gap-1.5">
         ${Object.entries(devDeps).map(([k, v]) => `
-          <span class="stat-chip bg-blue-500/8 text-blue-400 font-mono text-[11px] border border-blue-500/10">${k} <span class="text-bnb-muted">${v}</span></span>
+          <span class="stat-chip bg-blue-500/8 text-blue-400 font-mono text-[11px] border border-blue-500/10">${escapeHtml(k)} <span class="text-bnb-muted">${escapeHtml(v)}</span></span>
         `).join("")}
       </div>
     </div>` : ""}
@@ -398,10 +411,14 @@ export function buildJsonPreview(content: string, filename: string): string {
 
   // Generic JSON
   const renderValue = (val: unknown, depth: number): string => {
+    if (depth > 5) return '<span class="text-bnb-muted">…</span>';
     if (val === null) return '<span class="text-bnb-muted/50">null</span>';
     if (typeof val === "boolean") return `<span class="text-bnb-yellow">${val}</span>`;
     if (typeof val === "number") return `<span class="text-bnb-success">${val}</span>`;
-    if (typeof val === "string") return `<span class="text-blue-400">"${val.length > 60 ? val.slice(0, 60) + "…" : val}"</span>`;
+    if (typeof val === "string") {
+      const truncated = val.length > 60 ? val.slice(0, 60) + "…" : val;
+      return `<span class="text-blue-400">"${escapeHtml(truncated)}"</span>`;
+    }
     if (Array.isArray(val)) {
       if (val.length === 0) return '<span class="text-bnb-muted">[]</span>';
       return `<div class="ml-4 pl-3 border-l border-bnb-border">${val.map((v, i) => `<div class="py-0.5"><span class="text-bnb-muted text-[10px]">${i}</span> ${renderValue(v, depth + 1)}</div>`).join("")}</div>`;
@@ -409,9 +426,9 @@ export function buildJsonPreview(content: string, filename: string): string {
     if (typeof val === "object") {
       const entries = Object.entries(val as Record<string, unknown>);
       if (depth > 3) return '<span class="text-bnb-muted">{…}</span>';
-      return `<div class="ml-4 pl-3 border-l border-bnb-border">${entries.map(([k, v]) => `<div class="py-0.5"><span class="text-bnb-yellow">${k}</span><span class="text-bnb-muted">: </span>${renderValue(v, depth + 1)}</div>`).join("")}</div>`;
+      return `<div class="ml-4 pl-3 border-l border-bnb-border">${entries.map(([k, v]) => `<div class="py-0.5"><span class="text-bnb-yellow">${escapeHtml(k)}</span><span class="text-bnb-muted">: </span>${renderValue(v, depth + 1)}</div>`).join("")}</div>`;
     }
-    return String(val);
+    return escapeHtml(String(val));
   };
 
   return `<!DOCTYPE html>
@@ -460,7 +477,7 @@ export function buildCssPreview(content: string, filename: string): string {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h7" stroke="#ec4899" stroke-width="2" stroke-linecap="round"/></svg>
         </div>
         <div>
-          <h1 class="text-lg font-bold text-bnb-text">${filename.split("/").pop()}</h1>
+          <h1 class="text-lg font-bold text-bnb-text">${escapeHtml(filename.split("/").pop() || filename)}</h1>
           <div class="flex gap-2 mt-0.5">
             ${colorProps.length > 0 ? `<span class="tag bg-pink-500/10 text-pink-400">${colorProps.length} colors</span>` : ""}
             <span class="tag bg-purple-500/10 text-purple-400">${classes.length} classes</span>
@@ -475,7 +492,7 @@ export function buildCssPreview(content: string, filename: string): string {
       <div class="grid grid-cols-2 gap-2">
         ${colorProps.slice(0, 12).map((p) => `
           <div class="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-[#1E2329]">
-            <div class="w-5 h-5 rounded-md border border-white/10 shrink-0" style="background:${p.value}"></div>
+            <div class="w-5 h-5 rounded-md border border-white/10 shrink-0" style="background:${escapeHtml(p.value)}"></div>
             <span class="text-xs font-mono text-bnb-muted truncate">--${p.name}</span>
           </div>`).join("")}
       </div>
@@ -584,7 +601,7 @@ export function buildProjectOverview(allFiles: GeneratedFile[]): string {
                 <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background:${info.color}12; color:${info.color}">${info.count} file${info.count > 1 ? "s" : ""}</span>
               </div>
               <div class="flex flex-wrap gap-1 ml-[42px]">
-                ${info.files.map((name: string) => `<span class="text-[11px] font-mono px-2 py-0.5 rounded-md text-bnb-muted" style="background: rgba(255,255,255,0.03);">${name}</span>`).join("")}
+                ${info.files.map((name: string) => `<span class="text-[11px] font-mono px-2 py-0.5 rounded-md text-bnb-muted" style="background: rgba(255,255,255,0.03);">${escapeHtml(name)}</span>`).join("")}
               </div>
             </div>`
           )

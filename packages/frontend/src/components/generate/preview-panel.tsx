@@ -109,7 +109,7 @@ export function PreviewPanel({
     <div className="absolute inset-0 bg-[#181A20]">
       <iframe
         srcDoc={previewHtml}
-        sandbox="allow-scripts allow-same-origin"
+        sandbox="allow-scripts"
         className="w-full h-full border-0"
         title="File preview"
         style={{ display: "block" }}
