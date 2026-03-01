@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Header } from "@/components/landing/header";
 import { Hero } from "@/components/landing/hero";
 import { Features } from "@/components/landing/features";
@@ -7,7 +8,16 @@ import { Presentation } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative hero-gradient overflow-hidden">
+      {/* Floating BNB logos — page level so they show behind header */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <div className="absolute top-6 left-[10%] opacity-[0.04] animate-float">
+          <Image src="/bnb-logo.svg" alt="" width={80} height={80} aria-hidden />
+        </div>
+        <div className="absolute top-16 right-[15%] opacity-[0.04] animate-float-delayed">
+          <Image src="/bnb-logo.svg" alt="" width={60} height={60} aria-hidden />
+        </div>
+      </div>
       <Header />
       <main className="flex-1">
         <Hero />

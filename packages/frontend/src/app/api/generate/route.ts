@@ -4,34 +4,59 @@ import { executeTool } from "@/lib/tool-executor";
 import { encodeSSE } from "@/lib/stream-protocol";
 import type { StreamEvent } from "@/lib/stream-protocol";
 
-const SYSTEM_PROMPT = `You are a BNB Chain development assistant. You help developers build branded BNB Chain applications.
+const SYSTEM_PROMPT = `You are a BNB Chain project generator. You create polished, brand-consistent web pages and smart contracts for BNB Chain projects.
 
-You have access to official BNB Chain brand assets through these tools:
-- get_brand_colors: Official color palette, CSS variables, Tailwind config, typography
-- get_logo: Official logo files (SVG) and usage guidelines
-- get_contract_template: Production-ready BEP20/BEP721 Solidity contracts with Hardhat config
-- get_ui_component: Branded React components (ConnectWallet, NetworkSwitcher)
+## MANDATORY WORKFLOW — follow these steps IN ORDER:
 
-IMPORTANT INSTRUCTIONS:
-1. ALWAYS use the brand tools to get official assets. Never make up colors or styles.
-2. Call get_brand_colors first to get the design system, then other tools as needed.
-3. When generating a project, output ALL files using this exact format:
+Step 1: Call get_design_template with the appropriate type:
+  - "token" for any BEP20 token project
+  - "nft" for any NFT / BEP721 project
+  - "dashboard" for any dApp with a dashboard UI
+  - "landing" for any other project type
+  This returns a complete HTML reference template. You MUST base your output on this template.
 
----FILE: path/to/file.ext---
-file content here
----END FILE---
+Step 2: If the project involves a smart contract, call get_contract_template to get the Solidity code.
 
-4. Generate complete, production-ready files. Every file should be usable as-is.
-5. Use the official BNB Chain brand colors (#F0B90B yellow, #181A20 dark) consistently.
-6. Always include dark mode support using CSS variables.
-7. Use Space Grotesk for headings and Inter for body text.
-8. For contract projects, include hardhat.config.ts, package.json, and a deploy script.
-9. For frontend projects, include all necessary config files (tsconfig, tailwind, etc).
+Step 3: Generate output files using this exact format:
+  ---FILE: path/to/file.ext---
+  file content here
+  ---END FILE---
 
-Focus on creating polished, branded output that follows BNB Chain design guidelines.`;
+## OUTPUT RULES:
+
+1. The MAIN output must be a standalone HTML file (index.html) based on the design template.
+   - Use the Tailwind CDN and Google Fonts links from the template (already included).
+   - Keep the BNB logo SVG in the navbar exactly as provided in the template.
+   - Keep the design system: #F0B90B yellow, #1E2329 dark text, #707A8A secondary, #FAFAFA background.
+   - Keep Space Grotesk for headings, Inter for body text.
+   - Light mode only — do NOT add dark mode.
+
+2. Replace ALL {{PLACEHOLDER}} values in the template with real content based on the user's request.
+   - Invent reasonable placeholder data (token supply, price, stats) if the user didn't specify.
+   - Write compelling copy that matches the project's purpose.
+
+3. You may customize the template:
+   - Add, remove, or reorder sections to fit the project.
+   - Add new cards, stats, or content using the same styling patterns from the template.
+   - Change section headings and descriptions.
+   - But do NOT change the core design system (colors, fonts, card styles, navbar structure).
+
+4. For smart contract projects, also output the .sol file and hardhat config files.
+
+5. Every file must be complete and production-ready. No TODOs, no placeholders left unfilled.
+
+## DO NOT:
+- Create React/TSX/JSX files — always output standalone HTML with Tailwind CDN
+- Invent your own color scheme — use the template's BNB brand colors
+- Remove the BNB logo from the navbar
+- Add dark mode
+- Leave any {{PLACEHOLDER}} values in the final output
+- Call get_brand_colors or get_logo or get_ui_component — the design template already includes everything needed`;
 
 export async function POST(request: Request) {
-  const { prompt, apiKey } = await request.json();
+  const { prompt, apiKey, maxTokens: userMaxTokens } = await request.json();
+  const ALLOWED_MAX_TOKENS = [4096, 8192, 16384, 32768];
+  const maxTokens = ALLOWED_MAX_TOKENS.includes(userMaxTokens) ? userMaxTokens : 16384;
 
   if (!apiKey) {
     return new Response(JSON.stringify({ error: "API key is required" }), {
@@ -67,7 +92,7 @@ export async function POST(request: Request) {
         while (continueLoop) {
           const response = await client.messages.create({
             model: "claude-sonnet-4-20250514",
-            max_tokens: 8096,
+            max_tokens: maxTokens,
             system: SYSTEM_PROMPT,
             tools: toolDefinitions,
             messages,

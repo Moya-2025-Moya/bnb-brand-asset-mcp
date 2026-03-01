@@ -136,15 +136,36 @@ export function Hero() {
       {/* Dot grid */}
       <div className="absolute inset-0 dot-grid" />
 
-      {/* Floating BNB logos */}
-      <div className="absolute top-20 left-[10%] opacity-[0.04] animate-float">
+      {/* Floating BNB logos — high density */}
+      <div className="absolute top-12 left-[5%] opacity-[0.1] animate-float">
+        <Image src="/bnb-logo.svg" alt="" width={120} height={120} aria-hidden />
+      </div>
+      <div className="absolute top-8 right-[8%] opacity-[0.1] animate-float-delayed">
+        <Image src="/bnb-logo.svg" alt="" width={100} height={100} aria-hidden />
+      </div>
+      <div className="absolute top-[45%] left-[2%] opacity-[0.1] animate-float-slow">
+        <Image src="/bnb-logo.svg" alt="" width={90} height={90} aria-hidden />
+      </div>
+      <div className="absolute bottom-20 right-[5%] opacity-[0.1] animate-float">
+        <Image src="/bnb-logo.svg" alt="" width={110} height={110} aria-hidden />
+      </div>
+      <div className="absolute top-28 left-[30%] opacity-[0.1] animate-float-delayed">
+        <Image src="/bnb-logo.svg" alt="" width={70} height={70} aria-hidden />
+      </div>
+      <div className="absolute top-16 right-[30%] opacity-[0.1] animate-float-slow">
         <Image src="/bnb-logo.svg" alt="" width={80} height={80} aria-hidden />
       </div>
-      <div className="absolute top-40 right-[15%] opacity-[0.04] animate-float-delayed">
-        <Image src="/bnb-logo.svg" alt="" width={60} height={60} aria-hidden />
+      <div className="absolute bottom-40 left-[18%] opacity-[0.1] animate-float-delayed">
+        <Image src="/bnb-logo.svg" alt="" width={95} height={95} aria-hidden />
       </div>
-      <div className="absolute bottom-32 left-[25%] opacity-[0.04] animate-float-slow">
-        <Image src="/bnb-logo.svg" alt="" width={50} height={50} aria-hidden />
+      <div className="absolute bottom-12 left-[45%] opacity-[0.1] animate-float">
+        <Image src="/bnb-logo.svg" alt="" width={75} height={75} aria-hidden />
+      </div>
+      <div className="absolute top-[60%] right-[18%] opacity-[0.1] animate-float-slow">
+        <Image src="/bnb-logo.svg" alt="" width={85} height={85} aria-hidden />
+      </div>
+      <div className="absolute top-[35%] right-[40%] opacity-[0.1] animate-float">
+        <Image src="/bnb-logo.svg" alt="" width={65} height={65} aria-hidden />
       </div>
 
       <div className="relative z-10 mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-32 lg:py-40">
@@ -189,31 +210,36 @@ export function Hero() {
           </div>
 
           {/* Buttons */}
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row animate-in fade-in slide-in-from-bottom-4 duration-500 delay-500 fill-mode-both">
-            <Button size="lg" asChild className="gap-2 text-base btn-bnb-gradient border-0 h-12 px-8 rounded-xl">
-              <Link href="/generate">
-                Generate Project
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="gap-2 text-base font-mono h-12 px-6 rounded-xl border-border/80 hover:border-primary/50"
-              onClick={handleCopy}
-            >
-              {copied ? (
-                <>
-                  <Check className="h-4 w-4 text-[#18DC7E]" />
-                  Copied!
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4" />
-                  Add to Claude
-                </>
-              )}
-            </Button>
+          <div className="mt-10 flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-500 fill-mode-both">
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <Button size="lg" asChild className="gap-2 text-base btn-bnb-gradient border-0 h-12 px-8 rounded-xl">
+                <Link href="/generate">
+                  Generate Project
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="gap-2 text-base font-mono h-12 px-6 rounded-xl border-border/80 hover:border-primary/50"
+                onClick={handleCopy}
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-4 w-4 text-[#18DC7E]" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    Add to Claude
+                  </>
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground max-w-md text-center">
+              Click &quot;Add to Claude&quot; to copy the command, then paste it into your terminal to connect BNB Dev Suite MCP to Claude Code.
+            </p>
           </div>
 
           {/* === TERMINAL MOCK === */}

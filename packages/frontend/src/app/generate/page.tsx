@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { Header } from "@/components/landing/header";
 import { ApiKeyInput } from "@/components/generate/api-key-input";
 import { PromptInput } from "@/components/generate/prompt-input";
@@ -26,6 +27,7 @@ import {
   MessageSquare,
   ChevronDown,
   ChevronUp,
+  Zap,
 } from "lucide-react";
 import type { GenerationStep } from "@/hooks/use-generation";
 
@@ -94,6 +96,7 @@ function LogLine({ step }: { step: GenerationStep }) {
 
 export default function GeneratePage() {
   const [apiKey, setApiKey] = useLocalStorage("bnb-dev-suite-api-key", "");
+  const [maxTokens, setMaxTokens] = useLocalStorage("bnb-dev-suite-max-tokens", "16384");
   const [prompt, setPrompt] = useState("");
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null);
@@ -147,7 +150,7 @@ export default function GeneratePage() {
 
   const handleSubmit = () => {
     if (!prompt.trim() || !apiKey.trim()) return;
-    generate(prompt, apiKey);
+    generate(prompt, apiKey, Number(maxTokens));
   };
 
   const handleReset = () => {
@@ -186,9 +189,54 @@ export default function GeneratePage() {
   })();
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col relative hero-gradient overflow-hidden">
+      {/* Ambient gradients — match landing page */}
+      <div
+        className="absolute -top-[200px] -left-[200px] w-[600px] h-[600px] rounded-full pointer-events-none z-0"
+        style={{ background: "radial-gradient(circle, rgba(240,185,11,0.08) 0%, transparent 70%)" }}
+      />
+      <div
+        className="absolute -bottom-[150px] -right-[150px] w-[500px] h-[500px] rounded-full pointer-events-none z-0"
+        style={{ background: "radial-gradient(circle, rgba(24,220,126,0.06) 0%, transparent 70%)" }}
+      />
+      {/* Dot grid */}
+      <div className="absolute inset-0 dot-grid z-0" />
+
+      {/* Floating BNB logos — high density */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <div className="absolute top-6 left-[5%] opacity-[0.1] animate-float">
+          <Image src="/bnb-logo.svg" alt="" width={120} height={120} aria-hidden />
+        </div>
+        <div className="absolute top-10 right-[8%] opacity-[0.1] animate-float-delayed">
+          <Image src="/bnb-logo.svg" alt="" width={100} height={100} aria-hidden />
+        </div>
+        <div className="absolute top-[40%] left-[3%] opacity-[0.1] animate-float-slow">
+          <Image src="/bnb-logo.svg" alt="" width={90} height={90} aria-hidden />
+        </div>
+        <div className="absolute bottom-[15%] right-[5%] opacity-[0.1] animate-float">
+          <Image src="/bnb-logo.svg" alt="" width={110} height={110} aria-hidden />
+        </div>
+        <div className="absolute top-24 left-[28%] opacity-[0.1] animate-float-delayed">
+          <Image src="/bnb-logo.svg" alt="" width={70} height={70} aria-hidden />
+        </div>
+        <div className="absolute top-12 right-[30%] opacity-[0.1] animate-float-slow">
+          <Image src="/bnb-logo.svg" alt="" width={80} height={80} aria-hidden />
+        </div>
+        <div className="absolute bottom-[35%] left-[18%] opacity-[0.1] animate-float-delayed">
+          <Image src="/bnb-logo.svg" alt="" width={95} height={95} aria-hidden />
+        </div>
+        <div className="absolute bottom-[10%] left-[42%] opacity-[0.1] animate-float">
+          <Image src="/bnb-logo.svg" alt="" width={75} height={75} aria-hidden />
+        </div>
+        <div className="absolute top-[55%] right-[15%] opacity-[0.1] animate-float-slow">
+          <Image src="/bnb-logo.svg" alt="" width={85} height={85} aria-hidden />
+        </div>
+        <div className="absolute top-[30%] right-[38%] opacity-[0.1] animate-float">
+          <Image src="/bnb-logo.svg" alt="" width={65} height={65} aria-hidden />
+        </div>
+      </div>
       <Header />
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col relative z-10">
         {/* === IDLE === */}
         {status === "idle" && (
           <div className="flex-1 flex items-start justify-center px-4 py-8 sm:px-6">
@@ -200,6 +248,46 @@ export default function GeneratePage() {
                 </p>
               </div>
               <ApiKeyInput value={apiKey} onChange={setApiKey} />
+
+              {/* Output quality tier */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-1.5">
+                  <Zap className="h-3.5 w-3.5" />
+                  Output Quality
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {([
+                    { value: "4096",  label: "Fast",     tokens: "4K",  desc: "Basic output, lower cost" },
+                    { value: "8192",  label: "Standard", tokens: "8K",  desc: "Good balance" },
+                    { value: "16384", label: "Premium",  tokens: "16K", desc: "Rich pages, detailed code" },
+                    { value: "32768", label: "Ultra",    tokens: "32K", desc: "Maximum detail & polish" },
+                  ] as const).map((tier) => (
+                    <button
+                      key={tier.value}
+                      onClick={() => setMaxTokens(tier.value)}
+                      className={`rounded-xl border p-3 text-left transition-all ${
+                        maxTokens === tier.value
+                          ? "border-[#F0B90B] bg-[#F0B90B]/5 shadow-sm shadow-[#F0B90B]/10"
+                          : "border-border hover:border-muted-foreground/30"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className={`text-sm font-semibold ${maxTokens === tier.value ? "text-[#F0B90B]" : "text-foreground"}`}>
+                          {tier.label}
+                        </span>
+                        <span className={`text-[11px] font-mono ${maxTokens === tier.value ? "text-[#F0B90B]/70" : "text-muted-foreground"}`}>
+                          {tier.tokens} tokens
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5">{tier.desc}</div>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Higher tiers use more API tokens per generation. Premium recommended for most projects.
+                </p>
+              </div>
+
               <TemplateCards onSelect={(p) => { setPrompt(p); setSelectedPrompt(p); }} selectedPrompt={selectedPrompt} />
               <PromptInput value={prompt} onChange={setPrompt} onSubmit={handleSubmit} isGenerating={false} disabled={!apiKey.trim() || !prompt.trim()} />
             </div>
@@ -239,8 +327,12 @@ export default function GeneratePage() {
                 <div className="flex items-center justify-between rounded-xl border bg-card px-5 py-3 shadow-sm shrink-0">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-[#F0B90B]" />
-                      <span className="text-sm font-medium">Generating...</span>
+                      {status === "error" ? (
+                        <AlertCircle className="h-4 w-4 text-destructive" />
+                      ) : (
+                        <Loader2 className="h-4 w-4 animate-spin text-[#F0B90B]" />
+                      )}
+                      <span className="text-sm font-medium">{status === "error" ? "Error" : "Generating..."}</span>
                     </div>
                     <div className="h-4 w-px bg-border" />
                     <Badge variant="secondary" className="gap-1.5 text-xs">

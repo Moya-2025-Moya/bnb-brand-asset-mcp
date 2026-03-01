@@ -95,4 +95,21 @@ export const toolDefinitions: Anthropic.Tool[] = [
       required: ["component"],
     },
   },
+  {
+    name: "get_design_template",
+    description:
+      "MUST be called BEFORE generating any HTML page. Returns a complete, brand-perfect HTML reference template for the requested page type.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        type: {
+          type: "string",
+          enum: ["token", "nft", "landing", "dashboard"],
+          description:
+            "Page type: 'token' for BEP20 showcase, 'nft' for NFT mint page, 'landing' for project landing, 'dashboard' for dApp UI",
+        },
+      },
+      required: ["type"],
+    },
+  },
 ];

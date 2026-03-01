@@ -34,7 +34,7 @@ export function useGeneration() {
     totalTools: 0,
   });
 
-  const generate = useCallback(async (prompt: string, apiKey: string) => {
+  const generate = useCallback(async (prompt: string, apiKey: string, maxTokens?: number) => {
     setState({
       status: "generating",
       steps: [],
@@ -47,7 +47,7 @@ export function useGeneration() {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, apiKey }),
+        body: JSON.stringify({ prompt, apiKey, ...(maxTokens ? { maxTokens } : {}) }),
       });
 
       if (!response.ok) {

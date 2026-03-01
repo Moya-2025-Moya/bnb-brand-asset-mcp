@@ -74,15 +74,47 @@ export const IFRAME_BASE_STYLES = `
     background: #1E2329;
     border: 1px solid #2B3139;
     border-radius: 16px;
-    transition: border-color 0.3s, box-shadow 0.3s;
+    transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .glow-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(240,185,11,0.03), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
   }
   .glow-card:hover {
     border-color: rgba(240,185,11,0.3);
-    box-shadow: 0 0 30px rgba(240,185,11,0.06);
+    box-shadow: 0 8px 40px rgba(240,185,11,0.08);
+    transform: translateY(-1px);
   }
+  .glow-card:hover::before { opacity: 1; }
   .gradient-border {
-    background: linear-gradient(135deg, rgba(240,185,11,0.15), rgba(252,213,53,0.05));
+    background: linear-gradient(135deg, rgba(240,185,11,0.12), rgba(252,213,53,0.04));
     border: 1px solid rgba(240,185,11,0.2);
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #F0B90B, transparent);
+    opacity: 0.6;
+  }
+  .glass-card {
+    background: rgba(30,35,41,0.8);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(240,185,11,0.1);
     border-radius: 16px;
   }
   .stat-chip {
@@ -90,6 +122,36 @@ export const IFRAME_BASE_STYLES = `
     padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
   }
   .tag { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; }
+  .dot-bg {
+    background-image: radial-gradient(circle, rgba(240,185,11,0.15) 0.5px, transparent 0.5px);
+    background-size: 24px 24px;
+    opacity: 0.3;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .glow-btn {
+    background: linear-gradient(135deg, #F0B90B, #FCD535);
+    box-shadow: 0 4px 20px rgba(240,185,11,0.3);
+    transition: all 0.3s;
+  }
+  .glow-btn:hover {
+    box-shadow: 0 8px 32px rgba(240,185,11,0.4);
+    transform: translateY(-1px);
+  }
+  @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 20px rgba(240,185,11,0.2); } 50% { box-shadow: 0 0 40px rgba(240,185,11,0.35); } }
+  @keyframes shimmer { 0% { left: -100%; } 100% { left: 200%; } }
+  .shimmer { position: relative; overflow: hidden; }
+  .shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(240,185,11,0.04), transparent);
+    animation: shimmer 4s infinite;
+  }
 `;
 
 export function getFileExtension(path: string): string {
@@ -609,6 +671,321 @@ export function buildProjectOverview(allFiles: GeneratedFile[]): string {
       </div>
     </div>
   </div>
+</body>
+</html>`;
+}
+
+// ────────────────────────────────────────────────────────────────
+// TSX / JSX Rich Preview — component-aware mockup builder
+// ────────────────────────────────────────────────────────────────
+
+const BNB_LOGO_SVG = `<svg width="28" height="28" viewBox="0 0 126 126" fill="none"><path d="M63 0L15.75 26.25V78.75L63 126l47.25-47.25V26.25L63 0z" fill="#F0B90B"/><path d="M63 36.75L40.95 47.25 63 57.75l22.05-10.5L63 36.75zM31.5 57.75l22.05 10.5v21l-22.05-10.5v-21zm41.45 10.5L95 57.75v21l-22.05 10.5v-21z" fill="#fff"/></svg>`;
+
+interface ProjectSignals {
+  hasConnectWallet: boolean;
+  hasNetworkSwitcher: boolean;
+  hasHeroSection: boolean;
+  hasTokenInfo: boolean;
+  hasTransferForm: boolean;
+  hasMintUI: boolean;
+  hasFeatureCards: boolean;
+  hasNavbar: boolean;
+  hasFooter: boolean;
+  projectName: string;
+  tokenName: string;
+  tokenSymbol: string;
+  contractType: "BEP20" | "BEP721" | "unknown";
+  featureItems: string[];
+}
+
+function detectProjectSignals(files: GeneratedFile[]): ProjectSignals {
+  const allContent = files.map((f) => f.content).join("\n");
+  const allPaths = files.map((f) => f.path.toLowerCase()).join("\n");
+
+  // Contract type detection
+  const isBEP721 = /ERC721|BEP721/i.test(allContent) || /\bNFT\b/.test(allContent);
+  const isBEP20 = /ERC20|BEP20/i.test(allContent);
+  const contractType: ProjectSignals["contractType"] = isBEP721 ? "BEP721" : isBEP20 ? "BEP20" : "unknown";
+
+  // Token metadata
+  const tokenNameMatch = allContent.match(/tokenName\s*[:=]\s*["']([^"']+)["']/i)
+    || allContent.match(/name\s*[:=]\s*["']([A-Z][a-zA-Z ]+Token)["']/i)
+    || allContent.match(/contract\s+(\w+)\s+is/);
+  const tokenSymbolMatch = allContent.match(/tokenSymbol\s*[:=]\s*["']([^"']+)["']/i)
+    || allContent.match(/symbol\s*[:=]\s*["']([A-Z]{2,6})["']/i);
+
+  // Project name from package.json or contract
+  let projectName = "BNB dApp";
+  const pkgFile = files.find((f) => f.path.endsWith("package.json"));
+  if (pkgFile) {
+    try {
+      const pkg = JSON.parse(pkgFile.content);
+      if (pkg.name) projectName = pkg.name.replace(/[-_]/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+    } catch { /* ignore */ }
+  }
+  const contractNameMatch = allContent.match(/contract\s+(\w+)/);
+  if (projectName === "BNB dApp" && contractNameMatch) projectName = contractNameMatch[1];
+
+  // Feature items detection
+  const featureItems: string[] = [];
+  const featureArrayMatch = allContent.match(/(?:features|items)\s*[:=]\s*\[([\s\S]*?)\]/);
+  if (featureArrayMatch) {
+    const titleMatches = featureArrayMatch[1].matchAll(/title\s*[:=]\s*["']([^"']+)["']/g);
+    for (const m of titleMatches) featureItems.push(m[1]);
+  }
+  if (featureItems.length === 0) {
+    // Fallback: look for common feature-like headings
+    const headingMatches = allContent.matchAll(/<h[23][^>]*>([^<]{4,40})<\/h[23]>/gi);
+    for (const m of headingMatches) {
+      if (featureItems.length < 6) featureItems.push(m[1]);
+    }
+  }
+
+  return {
+    hasConnectWallet: /ConnectWallet|connect.?wallet|useAccount|useConnect/i.test(allContent) || allPaths.includes("connectwallet"),
+    hasNetworkSwitcher: /NetworkSwitcher|network.?switch|useSwitchChain/i.test(allContent) || allPaths.includes("networkswitcher"),
+    hasHeroSection: /hero/i.test(allPaths) || (() => {
+      const tsxContent = files.filter((f) => /\.[tj]sx?$/.test(f.path)).map((f) => f.content).join("\n");
+      return /hero/i.test(tsxContent) || /className.*gradient.*text-[4-6]xl/i.test(tsxContent);
+    })(),
+    hasTokenInfo: /totalSupply|balanceOf|token.?dashboard|token.?info|decimals\(\)/i.test(allContent),
+    hasTransferForm: /recipient.*address|sendTransaction|transfer.*form|TransferForm|amount.*input/i.test(allContent),
+    hasMintUI: /mint|maxSupply|tokenURI|NFT.*mint/i.test(allContent) && isBEP721,
+    hasFeatureCards: featureItems.length >= 2 || /feature.?card|grid.*col.*3/i.test(allContent),
+    hasNavbar: /navbar|nav.?bar|<nav/i.test(allContent + allPaths),
+    hasFooter: /footer|<footer/i.test(allContent + allPaths),
+    projectName,
+    tokenName: tokenNameMatch?.[1] || "Token",
+    tokenSymbol: tokenSymbolMatch?.[1] || "TKN",
+    contractType,
+    featureItems: featureItems.slice(0, 6),
+  };
+}
+
+function buildNavSection(signals: ProjectSignals): string {
+  return `
+  <nav style="display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:rgba(30,35,41,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(240,185,11,0.08);position:sticky;top:0;z-index:50;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      ${BNB_LOGO_SVG}
+      <span style="font-size:18px;font-weight:700;color:#EAECEF;">${escapeHtml(signals.projectName)}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      ${signals.hasNetworkSwitcher ? `
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:12px;background:rgba(43,49,57,0.8);border:1px solid #363C46;font-size:13px;color:#EAECEF;">
+        <span style="width:8px;height:8px;border-radius:50%;background:#0ECB81;display:inline-block;box-shadow:0 0 8px rgba(14,203,129,0.4);"></span>
+        BSC Testnet
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#848E9C" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>` : ""}
+      ${signals.hasConnectWallet ? `
+      <button class="glow-btn" style="padding:10px 24px;border-radius:14px;color:#181A20;font-weight:600;font-size:14px;border:none;cursor:pointer;">
+        Connect Wallet
+      </button>` : ""}
+    </div>
+  </nav>`;
+}
+
+function buildHeroSectionTsx(signals: ProjectSignals): string {
+  const subtitle = signals.contractType === "BEP20"
+    ? `Deploy and manage your ${escapeHtml(signals.tokenSymbol)} token on BNB Chain`
+    : signals.contractType === "BEP721"
+    ? "Mint, collect, and trade unique digital assets on BNB Chain"
+    : "Build, deploy, and interact with smart contracts on BNB Chain";
+
+  return `
+  <section style="text-align:center;padding:96px 32px 72px;background:linear-gradient(180deg,#181A20 0%,#1E2329 100%);position:relative;overflow:hidden;">
+    <div class="dot-bg"></div>
+    <div style="position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:600px;height:600px;border-radius:50%;background:#F0B90B;filter:blur(150px);opacity:0.07;pointer-events:none;"></div>
+    <div style="position:absolute;bottom:-100px;right:20%;width:300px;height:300px;border-radius:50%;background:#0ECB81;filter:blur(120px);opacity:0.04;pointer-events:none;"></div>
+    <div style="position:relative;z-index:1;max-width:660px;margin:0 auto;">
+      <div class="fade-up" style="display:inline-flex;align-items:center;gap:6px;padding:7px 18px;border-radius:20px;background:rgba(240,185,11,0.08);border:1px solid rgba(240,185,11,0.15);margin-bottom:28px;font-size:12px;font-weight:500;color:#F0B90B;backdrop-filter:blur(8px);">
+        ${BNB_LOGO_SVG.replace(/width="28" height="28"/, 'width="14" height="14"')}
+        Powered by BNB Chain
+      </div>
+      <h1 class="fade-up-1" style="font-size:52px;font-weight:700;line-height:1.08;margin-bottom:20px;background:linear-gradient(135deg,#EAECEF 30%,#F0B90B 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+        ${escapeHtml(signals.projectName)}
+      </h1>
+      <p class="fade-up-2" style="font-size:18px;color:#B7BDC6;line-height:1.7;margin-bottom:40px;max-width:520px;margin-left:auto;margin-right:auto;">${subtitle}</p>
+      <div class="fade-up-3" style="display:flex;justify-content:center;gap:14px;">
+        <button class="glow-btn" style="padding:14px 36px;border-radius:14px;color:#181A20;font-weight:600;font-size:16px;border:none;cursor:pointer;animation:pulse-glow 3s infinite;">
+          Get Started
+        </button>
+        <button style="padding:14px 36px;border-radius:14px;background:transparent;color:#EAECEF;font-weight:600;font-size:16px;border:1px solid rgba(240,185,11,0.2);cursor:pointer;transition:all 0.3s;">
+          View Docs
+        </button>
+      </div>
+    </div>
+  </section>`;
+}
+
+function buildTokenInfoSection(signals: ProjectSignals): string {
+  const stats = [
+    { label: "Token Name", value: escapeHtml(signals.tokenName), color: "#EAECEF" },
+    { label: "Symbol", value: escapeHtml(signals.tokenSymbol), color: "#F0B90B" },
+    { label: "Network", value: "BNB Smart Chain", color: "#0ECB81" },
+    { label: "Total Supply", value: "1,000,000", color: "#EAECEF" },
+    { label: "Decimals", value: "18", color: "#B7BDC6" },
+    { label: "Standard", value: "BEP-20", color: "#F0B90B" },
+  ];
+
+  return `
+  <section style="padding:56px 32px;max-width:800px;margin:0 auto;">
+    <h2 class="fade-up" style="font-size:26px;font-weight:700;color:#EAECEF;margin-bottom:8px;text-align:center;">Token Dashboard</h2>
+    <p class="fade-up-1" style="font-size:14px;color:#848E9C;text-align:center;margin-bottom:36px;">View and manage your token on BNB Chain</p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+      ${stats.map((s, i) => `
+        <div class="shimmer fade-up-${Math.min(i, 4)}" style="padding:24px;border-radius:16px;background:#1E2329;border:1px solid #2B3139;text-align:center;transition:border-color 0.3s,box-shadow 0.3s;">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:#848E9C;margin-bottom:10px;">${s.label}</div>
+          <div style="font-size:22px;font-weight:700;color:${s.color};">${s.value}</div>
+        </div>`).join("")}
+    </div>
+  </section>`;
+}
+
+function buildTransferSection(): string {
+  return `
+  <section style="padding:40px 32px;max-width:480px;margin:0 auto;">
+    <div class="fade-up" style="padding:32px;border-radius:20px;background:#1E2329;border:1px solid #2B3139;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-1px;left:-1px;right:-1px;height:2px;background:linear-gradient(90deg,transparent,#F0B90B,transparent);opacity:0.5;"></div>
+      <h3 style="font-size:18px;font-weight:600;color:#EAECEF;margin-bottom:24px;">Send Tokens</h3>
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:12px;color:#848E9C;margin-bottom:8px;font-weight:500;">Recipient Address</label>
+        <div style="padding:14px 16px;border-radius:14px;background:#181A20;border:1px solid #2B3139;color:#848E9C;font-size:14px;font-family:'JetBrains Mono',monospace;transition:border-color 0.3s;">
+          0x0000...0000
+        </div>
+      </div>
+      <div style="margin-bottom:28px;">
+        <label style="display:block;font-size:12px;color:#848E9C;margin-bottom:8px;font-weight:500;">Amount</label>
+        <div style="padding:14px 16px;border-radius:14px;background:#181A20;border:1px solid #2B3139;display:flex;align-items:center;justify-content:space-between;">
+          <span style="color:#848E9C;font-size:14px;">0.0</span>
+          <span style="font-size:12px;font-weight:600;color:#F0B90B;cursor:pointer;">MAX</span>
+        </div>
+      </div>
+      <button class="glow-btn" style="width:100%;padding:15px;border-radius:14px;color:#181A20;font-weight:600;font-size:15px;border:none;cursor:pointer;">
+        Send Transaction
+      </button>
+    </div>
+  </section>`;
+}
+
+function buildMintSection(signals: ProjectSignals): string {
+  return `
+  <section style="padding:56px 32px;max-width:480px;margin:0 auto;">
+    <div class="fade-up" style="padding:36px;border-radius:24px;background:#1E2329;border:1px solid rgba(240,185,11,0.15);text-align:center;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-1px;left:-1px;right:-1px;height:2px;background:linear-gradient(90deg,transparent,#F0B90B,#0ECB81,transparent);opacity:0.5;"></div>
+      <div style="width:120px;height:120px;border-radius:20px;margin:0 auto 24px;background:linear-gradient(135deg,rgba(240,185,11,0.15),rgba(168,85,247,0.1));display:flex;align-items:center;justify-content:center;box-shadow:0 8px 40px rgba(240,185,11,0.1);">
+        ${BNB_LOGO_SVG.replace(/width="28" height="28"/, 'width="48" height="48"')}
+      </div>
+      <h3 style="font-size:22px;font-weight:700;color:#EAECEF;margin-bottom:8px;">${escapeHtml(signals.projectName)}</h3>
+      <p style="font-size:14px;color:#848E9C;margin-bottom:28px;">Mint your unique NFT on BNB Chain</p>
+      <div style="display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:28px;">
+        <button style="width:44px;height:44px;border-radius:14px;background:#2B3139;border:1px solid #363C46;color:#EAECEF;font-size:18px;cursor:pointer;transition:border-color 0.3s;">−</button>
+        <span style="font-size:36px;font-weight:700;color:#EAECEF;min-width:48px;text-align:center;">1</span>
+        <button style="width:44px;height:44px;border-radius:14px;background:#2B3139;border:1px solid #363C46;color:#EAECEF;font-size:18px;cursor:pointer;transition:border-color 0.3s;">+</button>
+      </div>
+      <div style="font-size:13px;color:#848E9C;margin-bottom:24px;">
+        Price: <span style="color:#F0B90B;font-weight:600;">0.05 BNB</span> each
+      </div>
+      <button class="glow-btn" style="width:100%;padding:15px;border-radius:14px;color:#181A20;font-weight:600;font-size:15px;border:none;cursor:pointer;animation:pulse-glow 3s infinite;">
+        Mint NFT
+      </button>
+      <div style="margin-top:20px;font-size:12px;color:#848E9C;">
+        <span style="color:#0ECB81;">0</span> / 10,000 minted
+      </div>
+      <div style="margin-top:12px;height:4px;background:#2B3139;border-radius:2px;overflow:hidden;">
+        <div style="width:0%;height:100%;background:linear-gradient(90deg,#F0B90B,#0ECB81);border-radius:2px;"></div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function buildFeaturesSection(signals: ProjectSignals): string {
+  const defaults = ["Fast Transactions", "Low Gas Fees", "EVM Compatible", "Secure & Audited", "Cross-Chain Bridge", "DeFi Ready"];
+  const items = signals.featureItems.length >= 2 ? signals.featureItems : defaults;
+  const icons = ["⚡", "💰", "🔗", "🔒", "🌉", "📊"];
+  const colors = ["#F0B90B", "#0ECB81", "#3b82f6", "#a78bfa", "#ec4899", "#f97316"];
+
+  return `
+  <section style="padding:56px 32px;max-width:800px;margin:0 auto;">
+    <h2 class="fade-up" style="font-size:26px;font-weight:700;color:#EAECEF;text-align:center;margin-bottom:8px;">Features</h2>
+    <p class="fade-up-1" style="font-size:14px;color:#848E9C;text-align:center;margin-bottom:40px;">Enterprise-grade tools for the BNB Chain ecosystem</p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+      ${items.slice(0, 6).map((item, i) => `
+        <div class="glow-card fade-up-${Math.min(i + 1, 4)}" style="padding:28px;text-align:center;">
+          <div style="width:48px;height:48px;border-radius:14px;background:${colors[i % colors.length]}12;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px;">
+            ${icons[i % icons.length]}
+          </div>
+          <h3 style="font-size:15px;font-weight:600;color:#EAECEF;margin-bottom:8px;">${escapeHtml(item)}</h3>
+          <p style="font-size:13px;color:#848E9C;line-height:1.6;">Built on BNB Chain for optimal performance.</p>
+        </div>`).join("")}
+    </div>
+  </section>`;
+}
+
+function buildFooterSection(): string {
+  return `
+  <footer style="text-align:center;padding:40px 32px;border-top:1px solid rgba(43,49,57,0.8);margin-top:32px;position:relative;">
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:#848E9C;">
+      ${BNB_LOGO_SVG.replace(/width="28" height="28"/, 'width="16" height="16"')}
+      Powered by <span style="color:#F0B90B;font-weight:500;">BNB Chain</span>
+      <span style="color:#363C46;">|</span>
+      Built with <span style="color:#F0B90B;font-weight:500;">BNB Dev Suite</span>
+    </div>
+  </footer>`;
+}
+
+export function buildTsxPreview(files: GeneratedFile[]): string {
+  const signals = detectProjectSignals(files);
+
+  // If no meaningful UI signals at all, fallback to project overview
+  const hasAnyUI = signals.hasConnectWallet || signals.hasNetworkSwitcher ||
+    signals.hasHeroSection || signals.hasTokenInfo || signals.hasTransferForm ||
+    signals.hasMintUI || signals.hasFeatureCards || signals.hasNavbar;
+  if (!hasAnyUI) return buildProjectOverview(files);
+
+  const sections: string[] = [];
+
+  // Navbar — always shown if any UI detected
+  sections.push(buildNavSection(signals));
+
+  // Hero — shown if detected or has contract
+  if (signals.hasHeroSection || signals.contractType !== "unknown") {
+    sections.push(buildHeroSectionTsx(signals));
+  }
+
+  // Token info — BEP20 projects
+  if (signals.hasTokenInfo || signals.contractType === "BEP20") {
+    sections.push(buildTokenInfoSection(signals));
+  }
+
+  // Transfer form
+  if (signals.hasTransferForm && signals.contractType !== "BEP721") {
+    sections.push(buildTransferSection());
+  }
+
+  // Mint UI — BEP721/NFT
+  if (signals.hasMintUI || signals.contractType === "BEP721") {
+    sections.push(buildMintSection(signals));
+  }
+
+  // Feature cards
+  if (signals.hasFeatureCards) {
+    sections.push(buildFeaturesSection(signals));
+  }
+
+  // Footer — if more than just navbar
+  if (sections.length > 1) {
+    sections.push(buildFooterSection());
+  }
+
+  return `<!DOCTYPE html>
+<html class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>${IFRAME_BASE_STYLES}</style>
+</head>
+<body>
+  ${sections.join("\n")}
 </body>
 </html>`;
 }

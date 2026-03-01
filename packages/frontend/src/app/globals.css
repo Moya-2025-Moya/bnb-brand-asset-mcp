@@ -331,13 +331,23 @@
   transform: translateY(0);
 }
 
-/* Header gradient border */
+/* Header — matches hero-gradient so it blends seamlessly with page background */
 .header-gradient-border {
-  border-bottom: 1px solid transparent;
-  background-image: linear-gradient(var(--background), var(--background)),
-    linear-gradient(90deg, transparent, rgba(240, 185, 11, 0.3), transparent);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
+  position: relative;
+  background-color: hsl(var(--background));
+  background-image: linear-gradient(135deg, rgba(240, 185, 11, 0.08) 0%, transparent 50%, rgba(252, 213, 53, 0.04) 100%);
+}
+.dark .header-gradient-border {
+  background-image: linear-gradient(135deg, rgba(240, 185, 11, 0.12) 0%, transparent 50%, rgba(252, 213, 53, 0.06) 100%);
+}
+.header-gradient-border::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(240, 185, 11, 0.3), transparent);
 }
 
 /* Step connector line */

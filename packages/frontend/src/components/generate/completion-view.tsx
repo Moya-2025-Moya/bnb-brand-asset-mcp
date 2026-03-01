@@ -12,7 +12,6 @@ import {
   FileType,
   Globe,
   Wrench,
-  Terminal,
   BookOpen,
   Cpu,
   Copy,
@@ -26,7 +25,7 @@ import {
   getFileExtension,
   buildHtmlPreview,
   buildSolidityPreview,
-  buildProjectOverview,
+  buildTsxPreview,
 } from "@/lib/preview-builders";
 import type { GenerationStep, GeneratedFile } from "@/hooks/use-generation";
 
@@ -76,7 +75,7 @@ function CopyButton({ text, label }: { text: string; label?: string }) {
   return (
     <button
       data-copy-button
-      onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+      onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(text).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-muted/50 text-muted-foreground text-xs transition-colors"
     >
       {copied ? <Check className="h-3 w-3 text-[#18DC7E]" /> : <Copy className="h-3 w-3" />}
@@ -167,13 +166,20 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
     const constructorMatch = contractFile?.content.match(/constructor\s*\(([^)]*)\)/);
     const constructorParams = constructorMatch?.[1] || null;
 
-    // Group files
+    // Group files + precompute line counts
     const grouped: Record<string, GeneratedFile[]> = {};
+    const fileLinesMap: Record<string, number> = {};
     files.forEach((f) => {
       const ext = getFileExtension(f.path);
       if (!grouped[ext]) grouped[ext] = [];
       grouped[ext].push(f);
+      fileLinesMap[f.path] = f.content.split("\n").length;
     });
+
+    // Detect frontend libraries (avoid scanning in render)
+    const hasWagmi = files.some((f) => f.content.includes("wagmi") || f.content.includes("useAccount"));
+    const hasEthers = files.some((f) => f.content.includes("ethers"));
+    const hasViem = files.some((f) => f.content.includes("viem"));
 
     // Getting started commands (compact)
     const cmds: string[] = [];
@@ -191,8 +197,9 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
     return {
       contractFile, contractName, htmlFile, packageJson, hardhatConfig,
       hasTsx, totalLines, typeDescription, projectName, aiExplanation,
-      pairedTools, uniqueTools, functions, events, constructorParams,
-      grouped, guideText,
+      uniqueTools, functions, events, constructorParams,
+      grouped, fileLinesMap, guideText,
+      hasWagmi, hasEthers, hasViem,
     };
   }, [files, steps]);
 
@@ -202,7 +209,7 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
 
   const frontendPreviewHtml = useMemo(() => {
     if (analysis.htmlFile) return buildHtmlPreview(analysis.htmlFile.content);
-    if (analysis.hasTsx) return buildProjectOverview(files);
+    if (analysis.hasTsx) return buildTsxPreview(files);
     return null;
   }, [analysis.htmlFile, analysis.hasTsx, files]);
 
@@ -226,7 +233,7 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 mt-5">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-5">
           <div className="rounded-xl border bg-card p-3 text-center">
             <div className="text-2xl font-bold text-[#F0B90B]">{files.length}</div>
             <div className="text-[11px] text-muted-foreground">Files</div>
@@ -285,8 +292,9 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
           <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
             <div className="h-[500px] relative bg-[#181A20]">
               <iframe
+                key={effectiveTab}
                 srcDoc={effectiveTab === "frontend" ? (frontendPreviewHtml || "") : (contractPreviewHtml || "")}
-                sandbox="allow-scripts allow-same-origin"
+                sandbox="allow-scripts"
                 className="w-full h-full border-0"
                 title={effectiveTab === "frontend" ? "Frontend preview" : "Contract preview"}
                 style={{ display: "block" }}
@@ -302,6 +310,7 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
           <div
             role="button"
             tabIndex={0}
+            aria-expanded={guideOpen}
             onClick={(e) => {
               // Don't toggle if clicking the copy button
               if ((e.target as HTMLElement).closest('[data-copy-button]')) return;
@@ -360,7 +369,7 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
                     {groupFiles.map((f) => (
                       <div key={f.path} className="flex items-center justify-between px-4 py-2 hover:bg-muted/20 transition-colors">
                         <code className="text-xs font-mono text-foreground/80">{f.path}</code>
-                        <span className="text-[11px] text-muted-foreground">{f.content.split("\n").length} lines</span>
+                        <span className="text-[11px] text-muted-foreground">{analysis.fileLinesMap[f.path]} lines</span>
                       </div>
                     ))}
                   </div>
@@ -402,8 +411,8 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
                 )}
                 {analysis.functions.length > 0 && (
                   <div className="space-y-0.5">
-                    {analysis.functions.map((f, i) => (
-                      <code key={i} className="block text-xs font-mono text-foreground/70">
+                    {analysis.functions.map((f) => (
+                      <code key={`${f.name}-${f.params}`} className="block text-xs font-mono text-foreground/70">
                         {f.name}({f.params}){f.modifiers ? ` ${f.modifiers}` : ""}
                       </code>
                     ))}
@@ -411,8 +420,8 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
                 )}
                 {analysis.events.length > 0 && (
                   <div className="flex flex-wrap gap-1 pt-1 border-t border-border/50">
-                    {analysis.events.map((e, i) => (
-                      <span key={i} className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400">{e.name}</span>
+                    {analysis.events.map((e) => (
+                      <span key={e.name} className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400">{e.name}</span>
                     ))}
                   </div>
                 )}
@@ -427,9 +436,9 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
                 <Badge variant="secondary" className="text-xs">React</Badge>
                 <Badge variant="secondary" className="text-xs">TypeScript</Badge>
                 <Badge variant="secondary" className="text-xs">Tailwind CSS</Badge>
-                {files.some((f) => f.content.includes("wagmi") || f.content.includes("useAccount")) && <Badge variant="secondary" className="text-xs">wagmi</Badge>}
-                {files.some((f) => f.content.includes("ethers")) && <Badge variant="secondary" className="text-xs">ethers.js</Badge>}
-                {files.some((f) => f.content.includes("viem")) && <Badge variant="secondary" className="text-xs">viem</Badge>}
+                {analysis.hasWagmi && <Badge variant="secondary" className="text-xs">wagmi</Badge>}
+                {analysis.hasEthers && <Badge variant="secondary" className="text-xs">ethers.js</Badge>}
+                {analysis.hasViem && <Badge variant="secondary" className="text-xs">viem</Badge>}
               </>
             )}
             {analysis.hardhatConfig && (
@@ -447,8 +456,8 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
         <SectionHeader icon={<Wrench className="h-4 w-4" />} title="MCP Tools Used" subtitle={`${analysis.uniqueTools.length} tools`} />
 
         <div className="space-y-2">
-          {analysis.uniqueTools.map((tool, i) => (
-            <ToolCard key={i} tool={tool} spec={mcpToolSpecs[tool.name]} />
+          {analysis.uniqueTools.map((tool) => (
+            <ToolCard key={tool.name} tool={tool} spec={mcpToolSpecs[tool.name]} />
           ))}
         </div>
 
@@ -471,6 +480,7 @@ function ToolSpecAccordion() {
     <div className="mt-3 rounded-xl border bg-card overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
         className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/20 transition-colors"
       >
         <span className="text-xs font-medium text-muted-foreground">Full MCP Tool Specifications</span>
@@ -507,6 +517,7 @@ function ToolCard({ tool, spec }: {
     <div className="rounded-xl border bg-card overflow-hidden">
       <button
         onClick={() => setExpanded(!expanded)}
+        aria-expanded={expanded}
         className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/20 transition-colors"
       >
         <div className="flex items-center gap-2.5">

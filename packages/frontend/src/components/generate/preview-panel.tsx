@@ -10,13 +10,9 @@ import {
   buildJsonPreview,
   buildCssPreview,
   buildProjectOverview,
+  buildTsxPreview,
 } from "@/lib/preview-builders";
-
-interface GeneratedFile {
-  path: string;
-  content: string;
-  language: string;
-}
+import type { GeneratedFile } from "@/hooks/use-generation";
 
 interface PreviewPanelProps {
   file: GeneratedFile | null;
@@ -49,8 +45,11 @@ export function PreviewPanel({
         return buildMarkdownPreview(file.content);
       case "json":
         return buildJsonPreview(file.content, file.path);
+      case "tsx":
+      case "jsx":
+        return buildTsxPreview(allFiles);
       default:
-        // TSX/JSX and other files: show project overview instead of broken conversion
+        // Other files: show project overview instead of broken conversion
         if (allFiles.length > 0) return buildProjectOverview(allFiles);
         return null;
     }
@@ -108,6 +107,7 @@ export function PreviewPanel({
   return (
     <div className="absolute inset-0 bg-[#181A20]">
       <iframe
+        key={file?.path || "overview"}
         srcDoc={previewHtml}
         sandbox="allow-scripts"
         className="w-full h-full border-0"
