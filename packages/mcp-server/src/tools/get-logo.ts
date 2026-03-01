@@ -5,7 +5,7 @@ import { logoManifest, logoUsageGuidelines } from "../data/logo-manifest.js";
 export function registerGetLogo(server: McpServer) {
   server.tool(
     "get_logo",
-    "Get BNB Chain official logo files and usage guidelines. Returns logo metadata, SVG content, and brand usage guidelines.",
+    `REQUIRED for any BNB Chain project. Returns official BNB Chain logo SVG files that MUST be saved as actual files in the project (e.g., public/bnb-logo.svg) and referenced in the UI. Never describe or recreate the logo — always use the exact SVG content returned by this tool.`,
     {
       theme: z
         .enum(["light", "dark"])
@@ -28,17 +28,20 @@ export function registerGetLogo(server: McpServer) {
       if (format) filtered = filtered.filter((l) => l.format === format);
 
       const results: string[] = [];
-      results.push("# BNB Chain Logo Assets\n");
+      results.push("# BNB Chain Official Logo Assets\n");
+      results.push("## INSTRUCTIONS");
+      results.push("1. Save each SVG below as an actual file in the project (e.g., `public/bnb-logo.svg`, `public/bnb-logo-full.svg`)");
+      results.push("2. Reference the saved file in your HTML/JSX using <img> or Next.js <Image> — do NOT inline the SVG in components");
+      results.push("3. Use the icon variant for navbar/favicon, full variant for hero/footer");
+      results.push("4. Follow the usage guidelines at the bottom\n");
 
       for (const logo of filtered) {
         results.push(`## ${logo.name}`);
-        results.push(`- File: ${logo.filename}`);
-        results.push(`- Format: ${logo.format.toUpperCase()}`);
-        results.push(`- Theme: ${logo.theme}`);
-        results.push(`- Style: ${logo.style}`);
+        results.push(`- Suggested filename: \`${logo.filename}\``);
+        results.push(`- Theme: ${logo.theme} | Style: ${logo.style} | Format: ${logo.format.toUpperCase()}`);
         if (logo.width) results.push(`- Size: ${logo.width}x${logo.height}px`);
         results.push(`- Description: ${logo.description}`);
-        results.push(`\n\`\`\`svg\n${logo.svgContent}\n\`\`\``);
+        results.push(`\n### SVG Content — save as \`public/${logo.filename}\`\n\`\`\`svg\n${logo.svgContent}\n\`\`\``);
         results.push("");
       }
 

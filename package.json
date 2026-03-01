@@ -6,7 +6,7 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=frontend",
-    "build": "npm run build --workspaces",
+    "build": "npm run build:mcp && npm run build:frontend",
     "dev:frontend": "npm run dev --workspace=frontend",
     "build:mcp": "npm run build --workspace=bnb-dev-suite",
     "build:frontend": "npm run build --workspace=frontend",

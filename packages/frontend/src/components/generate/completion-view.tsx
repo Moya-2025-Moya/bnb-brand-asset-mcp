@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import {
   FileText,
   Layers,
@@ -25,6 +26,7 @@ import {
   getFileExtension,
   buildHtmlPreview,
   buildSolidityPreview,
+  buildProjectOverview,
 } from "@/lib/preview-builders";
 import type { GenerationStep, GeneratedFile } from "@/hooks/use-generation";
 
@@ -35,7 +37,6 @@ interface CompletionViewProps {
   prompt: string;
 }
 
-// File type visual config
 const fileTypeConfig: Record<string, { color: string; bg: string; icon: React.ReactNode; label: string }> = {
   sol: { color: "text-purple-500", bg: "bg-purple-500/10", icon: <Layers className="h-4 w-4" />, label: "Solidity" },
   tsx: { color: "text-blue-500", bg: "bg-blue-500/10", icon: <FileCode className="h-4 w-4" />, label: "React TSX" },
@@ -47,72 +48,62 @@ const fileTypeConfig: Record<string, { color: string; bg: string; icon: React.Re
   js: { color: "text-yellow-500", bg: "bg-yellow-500/10", icon: <Code2 className="h-4 w-4" />, label: "JavaScript" },
 };
 
-// MCP tool definitions for the spec section
 const mcpToolSpecs: Record<string, { description: string; params: Record<string, string>; returns: string }> = {
   get_brand_colors: {
-    description: "Get BNB Chain official brand colors, typography, CSS variables, and Tailwind config",
+    description: "BNB Chain official brand colors, typography, and Tailwind config",
     params: { theme: "light | dark | both", format: "json | css | tailwind | all" },
-    returns: "Design system tokens (colors, fonts, spacing)",
+    returns: "Design system tokens",
   },
   get_logo: {
-    description: "Get BNB Chain official logo files and usage guidelines",
+    description: "BNB Chain official logo files and usage guidelines",
     params: { theme: "light | dark", style: "full | icon", format: "svg | png" },
-    returns: "Logo metadata + SVG/PNG content",
+    returns: "Logo metadata + SVG/PNG",
   },
   get_contract_template: {
-    description: "Get BNB Chain smart contract templates with Hardhat config",
+    description: "BNB Chain smart contract templates with Hardhat config",
     params: { type: "BEP20 | BEP721", tokenName: "string", tokenSymbol: "string", includeHardhat: "boolean" },
-    returns: "Solidity source + Hardhat project files",
+    returns: "Solidity + Hardhat files",
   },
   get_ui_component: {
-    description: "Get BNB Chain branded React UI components",
+    description: "BNB Chain branded React UI components",
     params: { component: "ConnectWallet | NetworkSwitcher | all" },
-    returns: "React component source code",
+    returns: "React component source",
   },
 };
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({ text, label }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
       onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-      className="p-1 rounded hover:bg-muted/50 text-muted-foreground transition-colors"
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-muted/50 text-muted-foreground text-xs transition-colors"
     >
-      {copied ? <Check className="h-3.5 w-3.5 text-[#18DC7E]" /> : <Copy className="h-3.5 w-3.5" />}
+      {copied ? <Check className="h-3 w-3 text-[#18DC7E]" /> : <Copy className="h-3 w-3" />}
+      {label && <span>{copied ? "Copied" : label}</span>}
     </button>
   );
 }
 
-function CodeBlock({ code, language }: { code: string; language?: string }) {
+function SectionHeader({ icon, title, subtitle, right }: { icon: React.ReactNode; title: string; subtitle?: string; right?: React.ReactNode }) {
   return (
-    <div className="relative group rounded-lg border bg-muted/30 overflow-hidden">
-      <div className="flex items-center justify-between px-3 py-1.5 border-b bg-muted/20">
-        <span className="text-[10px] font-mono text-muted-foreground uppercase">{language || "shell"}</span>
-        <CopyButton text={code} />
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-[#F0B90B]/10 text-[#F0B90B]">
+          {icon}
+        </div>
+        <div>
+          <h3 className="text-base font-semibold">{title}</h3>
+          {subtitle && <p className="text-[11px] text-muted-foreground">{subtitle}</p>}
+        </div>
       </div>
-      <pre className="px-3 py-2.5 overflow-x-auto text-sm font-mono text-foreground/90">
-        <code>{code}</code>
-      </pre>
-    </div>
-  );
-}
-
-function SectionHeader({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle?: string }) {
-  return (
-    <div className="flex items-center gap-3 mb-5">
-      <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#F0B90B]/10 text-[#F0B90B]">
-        {icon}
-      </div>
-      <div>
-        <h3 className="text-lg font-semibold">{title}</h3>
-        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
-      </div>
+      {right}
     </div>
   );
 }
 
 export function CompletionView({ files, steps, totalTools, prompt }: CompletionViewProps) {
   const [previewTab, setPreviewTab] = useState<"frontend" | "contract">("frontend");
+  const [guideOpen, setGuideOpen] = useState(false);
 
   const analysis = useMemo(() => {
     const contractFile = files.find((f) => getFileExtension(f.path) === "sol");
@@ -125,7 +116,6 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
     const hasTsx = files.some((f) => getFileExtension(f.path) === "tsx");
     const totalLines = files.reduce((sum, f) => sum + f.content.split("\n").length, 0);
 
-    // Determine project type description
     let typeDescription = "BNB Chain Project";
     if (contractFile && (hasTsx || htmlFile)) {
       const standard = inherits?.includes("ERC721") || inherits?.includes("BEP721") ? "BEP721 NFT" :
@@ -138,7 +128,6 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
       typeDescription = "BNB Chain Frontend";
     }
 
-    // Parse project name
     let projectName = contractName || "BNB Project";
     if (packageJson) {
       try {
@@ -147,25 +136,25 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
       } catch { /* ignore */ }
     }
 
-    // AI explanation from text steps
-    const aiExplanation = steps
+    // AI explanation: only take the first meaningful text block, strip file markers
+    const aiTexts = steps
       .filter((s) => s.type === "text")
       .map((s) => (s.data as { content: string }).content)
       .filter(Boolean)
-      .join("\n\n");
+      .map((t) => t.replace(/---FILE:.*?---/g, "").trim())
+      .filter((t) => t.length > 10 && !t.startsWith("'use ") && !t.startsWith("import "));
+    const aiExplanation = aiTexts.length > 0 ? aiTexts[0] : "";
 
-    // Extract tool calls and results, paired by id
+    // Tool calls paired with results
     const toolCalls = steps.filter((s) => s.type === "tool_call").map((s) => s.data as { id: string; name: string; input: Record<string, unknown> });
     const toolResults = steps.filter((s) => s.type === "tool_result").map((s) => s.data as { id: string; name: string; result: string });
     const pairedTools = toolCalls.map((tc) => ({
       ...tc,
       result: toolResults.find((tr) => tr.id === tc.id)?.result,
     }));
-
-    // Deduplicate tools by name (keep first call of each unique tool)
     const uniqueTools = pairedTools.filter((t, i, arr) => arr.findIndex((x) => x.name === t.name) === i);
 
-    // Contract functions/events for tech spec
+    // Contract analysis
     const functions = contractFile
       ? [...contractFile.content.matchAll(/function\s+(\w+)\s*\(([^)]*)\)([^{]*)/g)].map((m) => ({
           name: m[1], params: m[2], modifiers: m[3].trim().replace(/\s+/g, " "),
@@ -177,7 +166,7 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
     const constructorMatch = contractFile?.content.match(/constructor\s*\(([^)]*)\)/);
     const constructorParams = constructorMatch?.[1] || null;
 
-    // Group files by extension
+    // Group files
     const grouped: Record<string, GeneratedFile[]> = {};
     files.forEach((f) => {
       const ext = getFileExtension(f.path);
@@ -185,133 +174,102 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
       grouped[ext].push(f);
     });
 
-    // Getting started steps
-    const gettingStartedSteps: { title: string; description: string; code: string; language?: string }[] = [];
-    gettingStartedSteps.push({
-      title: "Download & Extract",
-      description: "Click the Download button above to get a .zip file, then extract it.",
-      code: "unzip project.zip && cd project",
-    });
-    if (packageJson) {
-      gettingStartedSteps.push({
-        title: "Install Dependencies",
-        description: "Install the Node.js packages required by the project.",
-        code: "npm install",
-      });
-    }
-    if (envExample) {
-      gettingStartedSteps.push({
-        title: "Configure Environment",
-        description: "Copy the example environment file and fill in your keys.",
-        code: "cp .env.example .env\n# Edit .env with your private key and API keys",
-      });
-    }
+    // Getting started commands (compact)
+    const cmds: string[] = [];
+    cmds.push("# Download and extract the zip, then:");
+    cmds.push("cd project");
+    if (packageJson) cmds.push("npm install");
+    if (envExample) cmds.push("cp .env.example .env  # fill in your keys");
     if (hardhatConfig) {
-      gettingStartedSteps.push({
-        title: "Compile Contract",
-        description: "Compile the Solidity smart contracts using Hardhat.",
-        code: "npx hardhat compile",
-      });
-      gettingStartedSteps.push({
-        title: "Deploy to BNB Testnet",
-        description: "Deploy the compiled contract to the BNB Smart Chain testnet.",
-        code: "npx hardhat run scripts/deploy.ts --network bscTestnet",
-      });
+      cmds.push("npx hardhat compile");
+      cmds.push("npx hardhat run scripts/deploy.ts --network bscTestnet");
     }
-    if (hasTsx) {
-      gettingStartedSteps.push({
-        title: "Run Frontend",
-        description: "Start the development server to preview the frontend locally.",
-        code: "npm run dev",
-      });
-    }
+    if (hasTsx) cmds.push("npm run dev");
+    const guideText = cmds.join("\n");
 
     return {
       contractFile, contractName, htmlFile, packageJson, hardhatConfig,
       hasTsx, totalLines, typeDescription, projectName, aiExplanation,
       pairedTools, uniqueTools, functions, events, constructorParams,
-      grouped, gettingStartedSteps,
+      grouped, guideText,
     };
   }, [files, steps]);
 
-  const hasFrontendPreview = !!analysis.htmlFile;
+  // Preview: HTML file > TSX project overview > contract
+  const hasFrontendPreview = !!(analysis.htmlFile || analysis.hasTsx);
   const hasContractPreview = !!analysis.contractFile;
 
-  // Build preview HTML
   const frontendPreviewHtml = useMemo(() => {
-    if (!analysis.htmlFile) return null;
-    return buildHtmlPreview(analysis.htmlFile.content);
-  }, [analysis.htmlFile]);
+    if (analysis.htmlFile) return buildHtmlPreview(analysis.htmlFile.content);
+    if (analysis.hasTsx) return buildProjectOverview(files);
+    return null;
+  }, [analysis.htmlFile, analysis.hasTsx, files]);
 
   const contractPreviewHtml = useMemo(() => {
     if (!analysis.contractFile) return null;
     return buildSolidityPreview(analysis.contractFile.content, analysis.contractFile.path);
   }, [analysis.contractFile]);
 
-  // Auto-select best preview tab
+  // Default to frontend if available, else contract
   const effectiveTab = previewTab === "frontend" && !hasFrontendPreview ? "contract" :
     previewTab === "contract" && !hasContractPreview ? "frontend" : previewTab;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8 space-y-10">
+    <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
 
       {/* ========== Section 1: Hero ========== */}
-      <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#F0B90B]/20 to-[#18DC7E]/10 mx-auto">
-            <Layers className="h-7 w-7 text-[#F0B90B]" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold">{analysis.projectName}</h2>
-            <p className="text-sm text-muted-foreground mt-1">{analysis.typeDescription}</p>
-          </div>
+      <section className="relative animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {/* BNB logo top-right */}
+        <div className="absolute top-0 right-0">
+          <Image src="/bnb-logo.svg" alt="BNB Chain" width={40} height={40} className="opacity-60" />
+        </div>
+
+        <div className="text-center space-y-3">
+          <h2 className="text-2xl font-bold">{analysis.projectName}</h2>
+          <p className="text-sm text-muted-foreground">{analysis.typeDescription}</p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 mt-6">
-          <div className="rounded-xl border bg-card p-4 text-center">
+        <div className="grid grid-cols-3 gap-3 mt-5">
+          <div className="rounded-xl border bg-card p-3 text-center">
             <div className="text-2xl font-bold text-[#F0B90B]">{files.length}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">Files</div>
+            <div className="text-[11px] text-muted-foreground">Files</div>
           </div>
-          <div className="rounded-xl border bg-card p-4 text-center">
+          <div className="rounded-xl border bg-card p-3 text-center">
             <div className="text-2xl font-bold text-[#18DC7E]">{analysis.totalLines.toLocaleString()}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">Lines</div>
+            <div className="text-[11px] text-muted-foreground">Lines</div>
           </div>
-          <div className="rounded-xl border bg-card p-4 text-center">
+          <div className="rounded-xl border bg-card p-3 text-center">
             <div className="text-2xl font-bold text-blue-500">{totalTools}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">MCP Tools</div>
+            <div className="text-[11px] text-muted-foreground">MCP Tools</div>
           </div>
         </div>
 
-        {/* Prompt quote */}
-        <div className="mt-6 rounded-xl border bg-card p-4">
-          <div className="flex items-start gap-3">
-            <Quote className="h-4 w-4 text-[#F0B90B] mt-0.5 shrink-0" />
-            <p className="text-sm text-muted-foreground italic leading-relaxed">{prompt}</p>
-          </div>
+        {/* Prompt */}
+        <div className="mt-4 flex items-start gap-2 text-sm text-muted-foreground">
+          <Quote className="h-3.5 w-3.5 text-[#F0B90B] mt-0.5 shrink-0" />
+          <p className="italic leading-relaxed line-clamp-2">{prompt}</p>
         </div>
 
-        {/* AI explanation */}
+        {/* AI summary - short, first paragraph only */}
         {analysis.aiExplanation && (
-          <div className="mt-4 rounded-xl border bg-card p-4">
-            <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
-              {analysis.aiExplanation.length > 500 ? analysis.aiExplanation.slice(0, 500) + "..." : analysis.aiExplanation}
-            </p>
-          </div>
+          <p className="mt-3 text-sm text-foreground/70 leading-relaxed line-clamp-3">
+            {analysis.aiExplanation.slice(0, 250)}
+          </p>
         )}
       </section>
 
       {/* ========== Section 2: Preview ========== */}
       {(hasFrontendPreview || hasContractPreview) && (
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100 fill-mode-both">
-          <SectionHeader icon={<Globe className="h-4 w-4" />} title="Preview" subtitle="Live preview of generated output" />
+          <SectionHeader icon={<Globe className="h-4 w-4" />} title="Preview" />
 
-          {/* Tabs - only show if both types exist */}
+          {/* Tabs */}
           {hasFrontendPreview && hasContractPreview && (
-            <div className="flex items-center gap-1 mb-4">
+            <div className="flex items-center gap-1 mb-3">
               <button
                 onClick={() => setPreviewTab("frontend")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   effectiveTab === "frontend" ? "bg-card border shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -319,7 +277,7 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
               </button>
               <button
                 onClick={() => setPreviewTab("contract")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   effectiveTab === "contract" ? "bg-card border shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -342,31 +300,35 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
         </section>
       )}
 
-      {/* ========== Section 3: Getting Started ========== */}
+      {/* ========== Section 3: Getting Started (collapsed) ========== */}
       <section className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200 fill-mode-both">
-        <SectionHeader icon={<BookOpen className="h-4 w-4" />} title="Getting Started" subtitle="Step-by-step setup instructions" />
-
-        <div className="space-y-4">
-          {analysis.gettingStartedSteps.map((step, i) => (
-            <div key={i} className="rounded-xl border bg-card overflow-hidden">
-              <div className="flex items-start gap-4 p-4">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#F0B90B]/10 text-[#F0B90B] text-sm font-bold shrink-0 mt-0.5">
-                  {i + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-semibold mb-1">{step.title}</h4>
-                  <p className="text-xs text-muted-foreground mb-3">{step.description}</p>
-                  <CodeBlock code={step.code} language={step.language} />
-                </div>
+        <div className="rounded-xl border bg-card overflow-hidden">
+          <button
+            onClick={() => setGuideOpen(!guideOpen)}
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/20 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-[#F0B90B]/10 text-[#F0B90B]">
+                <BookOpen className="h-4 w-4" />
               </div>
+              <span className="text-sm font-semibold">Getting Started</span>
             </div>
-          ))}
+            <div className="flex items-center gap-2">
+              <CopyButton text={analysis.guideText} label="Copy" />
+              {guideOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+            </div>
+          </button>
+          {guideOpen && (
+            <div className="border-t px-4 py-3">
+              <pre className="text-sm font-mono text-foreground/80 whitespace-pre-wrap">{analysis.guideText}</pre>
+            </div>
+          )}
         </div>
       </section>
 
       {/* ========== Section 4: Project Files ========== */}
       <section className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300 fill-mode-both">
-        <SectionHeader icon={<FileText className="h-4 w-4" />} title="Project Files" subtitle={`${files.length} files generated`} />
+        <SectionHeader icon={<FileText className="h-4 w-4" />} title="Project Files" subtitle={`${files.length} files`} />
 
         <div className="space-y-3">
           {Object.entries(analysis.grouped)
@@ -375,22 +337,22 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
               const cfg = fileTypeConfig[ext] || { color: "text-gray-500", bg: "bg-gray-500/10", icon: <FileText className="h-4 w-4" />, label: ext.toUpperCase() };
               return (
                 <div key={ext} className="rounded-xl border bg-card overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`flex items-center justify-center w-7 h-7 rounded-lg ${cfg.bg} ${cfg.color}`}>
+                  <div className="flex items-center justify-between px-4 py-2.5 border-b bg-muted/30">
+                    <div className="flex items-center gap-2">
+                      <div className={`flex items-center justify-center w-6 h-6 rounded-lg ${cfg.bg} ${cfg.color}`}>
                         {cfg.icon}
                       </div>
                       <span className="text-sm font-medium">{cfg.label}</span>
                     </div>
                     <Badge variant="secondary" className="text-xs">
-                      {groupFiles.length} file{groupFiles.length > 1 ? "s" : ""}
+                      {groupFiles.length}
                     </Badge>
                   </div>
                   <div className="divide-y">
                     {groupFiles.map((f) => (
-                      <div key={f.path} className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/20 transition-colors">
-                        <code className="text-sm font-mono text-foreground/80">{f.path}</code>
-                        <span className="text-xs text-muted-foreground">{f.content.split("\n").length} lines</span>
+                      <div key={f.path} className="flex items-center justify-between px-4 py-2 hover:bg-muted/20 transition-colors">
+                        <code className="text-xs font-mono text-foreground/80">{f.path}</code>
+                        <span className="text-[11px] text-muted-foreground">{f.content.split("\n").length} lines</span>
                       </div>
                     ))}
                   </div>
@@ -402,170 +364,127 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
 
       {/* ========== Section 5: Technical Spec ========== */}
       <section className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[400ms] fill-mode-both">
-        <SectionHeader icon={<Cpu className="h-4 w-4" />} title="Technical Specification" subtitle="For Claude Code and AI tools" />
+        <SectionHeader
+          icon={<Cpu className="h-4 w-4" />}
+          title="Technical Specification"
+          subtitle="For Claude Code / AI tools"
+          right={<CopyButton text={buildTechSpecText(files, analysis)} label="Copy spec" />}
+        />
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* File tree */}
           <div className="rounded-xl border bg-card overflow-hidden">
-            <div className="px-4 py-3 border-b bg-muted/30">
-              <span className="text-sm font-medium">File Tree</span>
+            <div className="px-4 py-2.5 border-b bg-muted/30 flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground">FILE TREE</span>
             </div>
-            <pre className="px-4 py-3 text-sm font-mono text-foreground/80 overflow-x-auto">
+            <pre className="px-4 py-2.5 text-xs font-mono text-foreground/80 overflow-x-auto">
               {files.map((f) => f.path).join("\n")}
             </pre>
           </div>
 
-          {/* Contract info */}
+          {/* Contract */}
           {analysis.contractFile && (
             <div className="rounded-xl border bg-card overflow-hidden">
-              <div className="px-4 py-3 border-b bg-muted/30">
-                <span className="text-sm font-medium">Contract: {analysis.contractName || "Unknown"}</span>
+              <div className="px-4 py-2.5 border-b bg-muted/30">
+                <span className="text-xs font-medium text-muted-foreground">CONTRACT: {analysis.contractName}</span>
               </div>
-              <div className="p-4 space-y-3">
+              <div className="px-4 py-2.5 space-y-2">
                 {analysis.constructorParams && (
-                  <div>
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Constructor</span>
-                    <code className="block mt-1 text-sm font-mono text-foreground/80">
-                      constructor({analysis.constructorParams})
-                    </code>
-                  </div>
+                  <code className="block text-xs font-mono text-foreground/80">constructor({analysis.constructorParams})</code>
                 )}
                 {analysis.functions.length > 0 && (
-                  <div>
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Functions ({analysis.functions.length})</span>
-                    <div className="mt-1 space-y-1">
-                      {analysis.functions.map((f, i) => (
-                        <code key={i} className="block text-sm font-mono text-foreground/80">
-                          {f.name}({f.params}){f.modifiers ? ` ${f.modifiers}` : ""}
-                        </code>
-                      ))}
-                    </div>
+                  <div className="space-y-0.5">
+                    {analysis.functions.map((f, i) => (
+                      <code key={i} className="block text-xs font-mono text-foreground/70">
+                        {f.name}({f.params}){f.modifiers ? ` ${f.modifiers}` : ""}
+                      </code>
+                    ))}
                   </div>
                 )}
                 {analysis.events.length > 0 && (
-                  <div>
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Events ({analysis.events.length})</span>
-                    <div className="mt-1 space-y-1">
-                      {analysis.events.map((e, i) => (
-                        <code key={i} className="block text-sm font-mono text-foreground/80">
-                          {e.name}({e.params})
-                        </code>
-                      ))}
-                    </div>
+                  <div className="flex flex-wrap gap-1 pt-1 border-t border-border/50">
+                    {analysis.events.map((e, i) => (
+                      <span key={i} className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400">{e.name}</span>
+                    ))}
                   </div>
                 )}
               </div>
             </div>
           )}
 
-          {/* Frontend info */}
-          {analysis.hasTsx && (
-            <div className="rounded-xl border bg-card overflow-hidden">
-              <div className="px-4 py-3 border-b bg-muted/30">
-                <span className="text-sm font-medium">Frontend Stack</span>
-              </div>
-              <div className="p-4 text-sm text-foreground/80">
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">React</Badge>
-                  <Badge variant="secondary">TypeScript</Badge>
-                  <Badge variant="secondary">Tailwind CSS</Badge>
-                  {files.some((f) => f.content.includes("wagmi") || f.content.includes("useAccount")) && <Badge variant="secondary">wagmi</Badge>}
-                  {files.some((f) => f.content.includes("ethers")) && <Badge variant="secondary">ethers.js</Badge>}
-                  {files.some((f) => f.content.includes("viem")) && <Badge variant="secondary">viem</Badge>}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Network config */}
-          {analysis.hardhatConfig && (
-            <div className="rounded-xl border bg-card overflow-hidden">
-              <div className="px-4 py-3 border-b bg-muted/30">
-                <span className="text-sm font-medium">Network Configuration</span>
-              </div>
-              <div className="p-4 space-y-2 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">BSC Testnet</span>
-                  <code className="font-mono text-xs text-foreground/80">https://data-seed-prebsc-1-s1.binance.org:8545</code>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">BSC Mainnet</span>
-                  <code className="font-mono text-xs text-foreground/80">https://bsc-dataseed.binance.org</code>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Chain ID</span>
-                  <code className="font-mono text-xs text-foreground/80">97 (testnet) / 56 (mainnet)</code>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Example Claude Code command */}
-          <div className="rounded-xl border bg-card overflow-hidden">
-            <div className="px-4 py-3 border-b bg-muted/30">
-              <span className="text-sm font-medium">Example Claude Code Command</span>
-            </div>
-            <div className="p-4">
-              <CodeBlock
-                code={`claude "Review the generated ${analysis.contractName || "project"} and suggest optimizations for gas efficiency and security"`}
-                language="shell"
-              />
-            </div>
+          {/* Stack & Network */}
+          <div className="flex flex-wrap gap-2">
+            {analysis.hasTsx && (
+              <>
+                <Badge variant="secondary" className="text-xs">React</Badge>
+                <Badge variant="secondary" className="text-xs">TypeScript</Badge>
+                <Badge variant="secondary" className="text-xs">Tailwind CSS</Badge>
+                {files.some((f) => f.content.includes("wagmi") || f.content.includes("useAccount")) && <Badge variant="secondary" className="text-xs">wagmi</Badge>}
+                {files.some((f) => f.content.includes("ethers")) && <Badge variant="secondary" className="text-xs">ethers.js</Badge>}
+                {files.some((f) => f.content.includes("viem")) && <Badge variant="secondary" className="text-xs">viem</Badge>}
+              </>
+            )}
+            {analysis.hardhatConfig && (
+              <>
+                <Badge variant="secondary" className="text-xs">BSC Testnet (97)</Badge>
+                <Badge variant="secondary" className="text-xs">BSC Mainnet (56)</Badge>
+              </>
+            )}
           </div>
         </div>
       </section>
 
       {/* ========== Section 6: MCP Attribution ========== */}
       <section className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-500 fill-mode-both">
-        <SectionHeader icon={<Wrench className="h-4 w-4" />} title="MCP Tools Used" subtitle={`${analysis.uniqueTools.length} unique tools invoked`} />
+        <SectionHeader icon={<Wrench className="h-4 w-4" />} title="MCP Tools Used" subtitle={`${analysis.uniqueTools.length} tools`} />
 
-        <div className="space-y-3">
-          {analysis.uniqueTools.map((tool, i) => {
-            const spec = mcpToolSpecs[tool.name];
-            return (
-              <ToolCard key={i} tool={tool} spec={spec} />
-            );
-          })}
+        <div className="space-y-2">
+          {analysis.uniqueTools.map((tool, i) => (
+            <ToolCard key={i} tool={tool} spec={mcpToolSpecs[tool.name]} />
+          ))}
         </div>
 
-        {/* Full MCP spec */}
-        <div className="mt-6 rounded-xl border bg-card overflow-hidden">
-          <div className="px-4 py-3 border-b bg-muted/30">
-            <span className="text-sm font-medium">Available MCP Tool Specifications</span>
-          </div>
-          <div className="p-4 space-y-4">
-            {Object.entries(mcpToolSpecs).map(([name, spec]) => (
-              <div key={name} className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <code className="text-sm font-mono font-semibold text-[#F0B90B]">{name}</code>
-                </div>
-                <p className="text-xs text-muted-foreground">{spec.description}</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {Object.entries(spec.params).map(([param, type]) => (
-                    <span key={param} className="text-[11px] font-mono px-2 py-0.5 rounded bg-muted/50 text-muted-foreground">
-                      {param}: <span className="text-foreground/60">{type}</span>
-                    </span>
-                  ))}
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Returns: <span className="text-foreground/60">{spec.returns}</span>
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Spec accordion */}
+        <ToolSpecAccordion />
 
         {/* Powered by */}
-        <div className="mt-6 text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <Terminal className="h-4 w-4" />
-            <span>Powered by <span className="text-[#F0B90B] font-medium">BNB Dev Suite MCP</span></span>
-          </div>
-          <code className="text-xs font-mono text-muted-foreground">
-            npx @anthropic-ai/sdk mcp connect bnb-dev-suite
-          </code>
+        <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+          <Image src="/bnb-logo.svg" alt="BNB" width={16} height={16} />
+          <span>Powered by <span className="text-[#F0B90B] font-medium">BNB Dev Suite MCP</span></span>
         </div>
       </section>
+    </div>
+  );
+}
+
+function ToolSpecAccordion() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-3 rounded-xl border bg-card overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/20 transition-colors"
+      >
+        <span className="text-xs font-medium text-muted-foreground">Full MCP Tool Specifications</span>
+        {open ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+      </button>
+      {open && (
+        <div className="border-t px-4 py-3 space-y-3">
+          {Object.entries(mcpToolSpecs).map(([name, spec]) => (
+            <div key={name} className="space-y-1">
+              <code className="text-xs font-mono font-semibold text-[#F0B90B]">{name}</code>
+              <p className="text-[11px] text-muted-foreground">{spec.description}</p>
+              <div className="flex flex-wrap gap-1">
+                {Object.entries(spec.params).map(([param, type]) => (
+                  <span key={param} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground">
+                    {param}: {type}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -575,43 +494,62 @@ function ToolCard({ tool, spec }: {
   spec?: { description: string; params: Record<string, string>; returns: string };
 }) {
   const [expanded, setExpanded] = useState(false);
-  const resultSummary = tool.result
-    ? (tool.result.length > 150 ? tool.result.slice(0, 150) + "..." : tool.result)
-    : null;
 
   return (
     <div className="rounded-xl border bg-card overflow-hidden">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/20 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/20 transition-colors"
       >
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#F0B90B]/10 text-[#F0B90B]">
-            <Wrench className="h-4 w-4" />
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#F0B90B]/10 text-[#F0B90B]">
+            <Wrench className="h-3.5 w-3.5" />
           </div>
-          <div className="text-left">
-            <code className="text-sm font-mono font-semibold">{tool.name}</code>
-            {spec && <p className="text-xs text-muted-foreground mt-0.5">{spec.description}</p>}
-          </div>
+          <code className="text-sm font-mono font-medium">{tool.name}</code>
         </div>
-        {expanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+        {expanded ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
       </button>
       {expanded && (
-        <div className="border-t px-4 py-3 space-y-3">
-          <div>
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Parameters</span>
-            <pre className="mt-1 text-xs font-mono text-foreground/80 bg-muted/30 rounded-lg p-2 overflow-x-auto">
-              {JSON.stringify(tool.input, null, 2)}
-            </pre>
-          </div>
-          {resultSummary && (
-            <div>
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Result Summary</span>
-              <p className="mt-1 text-xs text-foreground/70 bg-muted/30 rounded-lg p-2">{resultSummary}</p>
-            </div>
+        <div className="border-t px-4 py-2.5 space-y-2">
+          {spec && <p className="text-[11px] text-muted-foreground">{spec.description}</p>}
+          <pre className="text-[11px] font-mono text-foreground/70 bg-muted/30 rounded-lg p-2 overflow-x-auto">
+            {JSON.stringify(tool.input, null, 2)}
+          </pre>
+          {tool.result && (
+            <p className="text-[11px] text-foreground/60 bg-muted/20 rounded-lg p-2 line-clamp-3">
+              {tool.result.slice(0, 200)}
+            </p>
           )}
         </div>
       )}
     </div>
   );
+}
+
+// Build a plain-text tech spec for copying
+function buildTechSpecText(
+  files: GeneratedFile[],
+  analysis: {
+    contractName?: string;
+    constructorParams: string | null;
+    functions: { name: string; params: string; modifiers: string }[];
+    events: { name: string; params: string }[];
+    hasTsx: boolean;
+    hardhatConfig: GeneratedFile | undefined;
+  }
+): string {
+  const lines: string[] = [];
+  lines.push("# File Tree");
+  files.forEach((f) => lines.push(f.path));
+  if (analysis.contractName) {
+    lines.push(`\n# Contract: ${analysis.contractName}`);
+    if (analysis.constructorParams) lines.push(`constructor(${analysis.constructorParams})`);
+    analysis.functions.forEach((f) => lines.push(`${f.name}(${f.params}) ${f.modifiers}`));
+    if (analysis.events.length) {
+      lines.push("Events: " + analysis.events.map((e) => e.name).join(", "));
+    }
+  }
+  if (analysis.hasTsx) lines.push("\n# Frontend: React + TypeScript + Tailwind CSS");
+  if (analysis.hardhatConfig) lines.push("# Network: BSC Testnet (97) / BSC Mainnet (56)");
+  return lines.join("\n");
 }
