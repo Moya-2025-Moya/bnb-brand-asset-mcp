@@ -22,9 +22,9 @@ export function registerGetLogo(server: McpServer) {
         .optional()
         .describe("Logo style: 'full' for logo with text, 'icon' for icon only"),
       format: z
-        .enum(["svg", "png"])
+        .enum(["svg"])
         .optional()
-        .describe("File format: 'svg' (recommended) or 'png'"),
+        .describe("File format: 'svg'"),
     },
     async ({ theme, style, format }) => {
       let filtered = logoManifest;
