@@ -3,6 +3,7 @@ import { Hero } from "@/components/landing/hero";
 import { Features } from "@/components/landing/features";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { Footer } from "@/components/landing/footer";
+import { Presentation } from "lucide-react";
 
 export default function Home() {
   return (
@@ -14,6 +15,14 @@ export default function Home() {
         <HowItWorks />
       </main>
       <Footer />
+      <a
+        href="/pitch-deck.html"
+        target="_blank"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-[#F0B90B] px-4 py-2.5 text-sm font-semibold text-[#181A20] shadow-lg transition-transform hover:scale-105"
+      >
+        <Presentation className="h-4 w-4" />
+        Pitch Deck
+      </a>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { codeToHtml } from "shiki";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Check, Copy } from "lucide-react";
 
 interface CodeBlockProps {
@@ -16,12 +17,13 @@ export function CodeBlock({ code, language, filename }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    setHtml("");
     codeToHtml(code, {
       lang: language === "solidity" ? "solidity" : language === "tsx" ? "tsx" : language === "typescript" ? "typescript" : language === "css" ? "css" : language === "json" ? "json" : "text",
       theme: "vitesse-dark",
     })
       .then(setHtml)
-      .catch(() => setHtml(`<pre>${code}</pre>`));
+      .catch(() => setHtml(`<pre>${escapeHtml(code)}</pre>`));
   }, [code, language]);
 
   const handleCopy = async () => {
@@ -40,10 +42,22 @@ export function CodeBlock({ code, language, filename }: CodeBlockProps) {
           </Button>
         </div>
       )}
-      <div
-        className="overflow-x-auto text-sm [&_pre]:p-4 [&_pre]:m-0 [&_pre]:bg-[#121212]!"
-        dangerouslySetInnerHTML={{ __html: html || `<pre class="p-4">${escapeHtml(code)}</pre>` }}
-      />
+      {!html ? (
+        <div className="p-4 space-y-2 bg-[#121212]">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton
+              key={i}
+              className="h-4 bg-white/5"
+              style={{ width: `${40 + Math.random() * 50}%` }}
+            />
+          ))}
+        </div>
+      ) : (
+        <div
+          className="overflow-x-auto text-sm [&_pre]:p-4 [&_pre]:m-0 [&_pre]:bg-[#121212]!"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      )}
     </div>
   );
 }

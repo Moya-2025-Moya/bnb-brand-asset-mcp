@@ -1,12 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logoManifest, logoUsageGuidelines } from "../data/logo-manifest.js";
-import { readFile } from "fs/promises";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 export function registerGetLogo(server: McpServer) {
   server.tool(
@@ -44,16 +38,7 @@ export function registerGetLogo(server: McpServer) {
         results.push(`- Style: ${logo.style}`);
         if (logo.width) results.push(`- Size: ${logo.width}x${logo.height}px`);
         results.push(`- Description: ${logo.description}`);
-
-        if (logo.format === "svg") {
-          try {
-            const assetsDir = join(__dirname, "..", "assets");
-            const svgContent = await readFile(join(assetsDir, logo.filename), "utf-8");
-            results.push(`\n\`\`\`svg\n${svgContent}\n\`\`\``);
-          } catch {
-            results.push(`\n_(SVG file not found at assets/${logo.filename}. Place the file in the assets directory.)_`);
-          }
-        }
+        results.push(`\n\`\`\`svg\n${logo.svgContent}\n\`\`\``);
         results.push("");
       }
 

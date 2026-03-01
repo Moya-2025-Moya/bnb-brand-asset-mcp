@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BNB Dev Suite - Pitch Deck</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow: #F0B90B;
+    --yellow-bright: #FFE900;
+    --yellow-bg: #FFF8E1;
+    --yellow-bg-subtle: #FFFDF5;
+    --black: #181A1E;
+    --bg: #FFFFFF;
+    --bg-2: #F7F7F8;
+    --bg-3: #F1F2F3;
+    --text: #181A1E;
+    --text-2: #5C5F6A;
+    --text-3: #8C8F9B;
+    --border: #E1E2E5;
+    --border-light: #F1F2F3;
+    --success: #15C16E;
+    --error: #EF2A37;
+    --info: #3B82F6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
+  code, .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+
+  /* ── Slide system ── */
+  .deck { width: 100vw; height: 100vh; position: relative; }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 80px;
+    opacity: 0;
+    pointer-events: none;
+    overflow-y: auto;
+    will-change: opacity, transform;
+  }
+
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  /* ── Nav ── */
+  .nav {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 100;
+  }
+
+  .nav-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .nav-dot.active {
+    background: var(--yellow);
+    width: 24px;
+    border-radius: 4px;
+  }
+
+  .slide-number {
+    position: fixed;
+    bottom: 28px;
+    right: 40px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-3);
+    z-index: 100;
+  }
+
+  .key-hint {
+    position: fixed;
+    bottom: 28px;
+    left: 40px;
+    font-size: 11px;
+    color: var(--text-3);
+    z-index: 100;
+  }
+
+  /* ── Typography ── */
+  .title-xl {
+    font-size: 54px;
+    font-weight: 700;
+    line-height: 1.12;
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+  }
+
+  .title-lg {
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1.18;
+    margin-bottom: 16px;
+    letter-spacing: -0.01em;
+  }
+
+  .subtitle {
+    font-size: 19px;
+    color: var(--text-2);
+    line-height: 1.6;
+    max-width: 680px;
+  }
+
+  .yellow { color: var(--yellow); }
+  .dim { color: var(--text-3); }
+  .green { color: var(--success); }
+  .red { color: var(--error); }
+  .text-center { text-align: center; }
+
+  /* ── Badge ── */
+  .badge {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .badge-yellow {
+    background: var(--yellow-bg);
+    color: #B8860B;
+    border: 1px solid #F0D060;
+  }
+
+  .badge-red {
+    background: #FFF0F0;
+    color: var(--error);
+    border: 1px solid #FFCDD2;
+  }
+
+  .badge-green {
+    background: #E8F8F0;
+    color: #0A8A4A;
+    border: 1px solid #A5E6C6;
+  }
+
+  .badge-blue {
+    background: #EFF6FF;
+    color: #2563EB;
+    border: 1px solid #BFDBFE;
+  }
+
+  /* ── Grids ── */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    width: 100%;
+    max-width: 1060px;
+    margin-top: 36px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+    max-width: 1060px;
+    margin-top: 28px;
+  }
+
+  .grid-4 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    width: 100%;
+    max-width: 1060px;
+    margin-top: 28px;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+  }
+
+  .card-accent {
+    background: var(--yellow-bg-subtle);
+    border: 1px solid #F0D060;
+    border-radius: 14px;
+    padding: 24px;
+  }
+
+  .card h3 { font-size: 17px; margin-bottom: 8px; }
+  .card p, .card-accent p { font-size: 14px; color: var(--text-2); line-height: 1.55; }
+
+  /* ── Compare boxes ── */
+  .compare-box {
+    border-radius: 14px;
+    padding: 28px;
+    height: 100%;
+  }
+
+  .compare-bad {
+    background: #FFF7F7;
+    border: 1px solid #FFCDD2;
+  }
+
+  .compare-good {
+    background: #F2FBF6;
+    border: 1px solid #A5E6C6;
+  }
+
+  .compare-box h3 {
+    font-size: 15px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .compare-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 13px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .compare-item .icon { flex-shrink: 0; margin-top: 1px; }
+
+  .vs-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+  }
+
+  .grid-2-vs { position: relative; }
+
+  /* ── Flow ── */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 36px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .flow-step {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 22px;
+    text-align: center;
+    min-width: 140px;
+  }
+
+  .flow-step.highlight {
+    border-color: var(--yellow);
+    background: var(--yellow-bg-subtle);
+  }
+
+  .flow-step .step-label {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .flow-step .step-text {
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  .flow-arrow { font-size: 18px; color: var(--text-3); }
+
+  /* ── Stats ── */
+  .stat { text-align: center; }
+
+  .stat-number {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 46px;
+    font-weight: 700;
+    color: var(--yellow);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .stat-label { font-size: 13px; color: var(--text-2); }
+
+  /* ── Swatches ── */
+  .swatch-row { display: flex; gap: 4px; margin: 8px 0; }
+  .swatch { width: 30px; height: 30px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.06); }
+
+  /* ── Q&A ── */
+  .qa-question {
+    font-size: 27px;
+    font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--text);
+    margin-bottom: 24px;
+    line-height: 1.3;
+    max-width: 780px;
+    text-align: center;
+  }
+
+  .qa-answer {
+    font-size: 17px;
+    color: var(--text-2);
+    line-height: 1.7;
+    max-width: 720px;
+    text-align: center;
+  }
+
+  .qa-answer strong { color: var(--text); font-weight: 600; }
+
+  .divider {
+    width: 48px;
+    height: 3px;
+    background: var(--yellow);
+    border-radius: 2px;
+    margin: 16px 0;
+  }
+
+  /* ── Emphasis ── */
+  .emphasis {
+    background: var(--yellow-bg);
+    border: 1px solid #F0D060;
+    border-radius: 12px;
+    padding: 18px 26px;
+    margin-top: 24px;
+    max-width: 720px;
+    text-align: center;
+    font-size: 15px;
+    color: var(--text-2);
+    line-height: 1.6;
+  }
+
+  .emphasis strong { color: var(--text); }
+
+  /* ── Logo ── */
+  .logo-mark { width: 56px; height: 56px; margin-bottom: 24px; }
+
+  /* ── Cover bg ── */
+  .cover-bg {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 30%, rgba(240,185,11,0.08) 0%, transparent 55%);
+    pointer-events: none;
+  }
+
+  /* ── Tool icon ── */
+  .tool-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 10px;
+    background: var(--yellow-bg);
+  }
+
+  /* ── Terminal ── */
+  .terminal {
+    background: var(--black);
+    border-radius: 12px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 640px;
+    margin-top: 28px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  }
+
+  .terminal-bar {
+    display: flex;
+    gap: 6px;
+    padding: 12px 16px;
+    background: #1E2329;
+  }
+
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  .terminal-body {
+    padding: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #EAECEF;
+  }
+
+  .terminal-body .t-dim { color: #848E9C; }
+  .terminal-body .t-yellow { color: #FCD535; }
+  .terminal-body .t-green { color: #0ECB81; }
+
+  /* ── Feature list ── */
+  .feature-list { list-style: none; max-width: 560px; }
+
+  .feature-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 14px;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .feature-list .bullet {
+    color: var(--yellow);
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* ── Pulse ── */
+  @keyframes pulse-border {
+    0%, 100% { border-color: #F0D060; }
+    50% { border-color: var(--yellow); }
+  }
+  .pulse { animation: pulse-border 3s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <!-- ==================== SLIDE 1: Cover ==================== -->
+  <div class="slide active" data-slide="0">
+    <div class="cover-bg"></div>
+    <svg class="logo-mark" viewBox="0 0 96 96" fill="none">
+      <circle cx="48" cy="48" r="48" fill="#F0B90B"/>
+      <path d="M34.5355 42.4676L48.0002 29.0032L61.4717 42.4747L69.3063 34.6397L48.0002 13.3333L26.7007 34.6328L34.5355 42.4676Z" fill="white"/>
+      <path d="M21.1683 40.1646L29.003 47.9993L21.1679 55.8344L13.3333 47.9997L21.1683 40.1646Z" fill="white"/>
+      <path d="M34.5355 53.5322L48.0002 66.9962L61.4714 53.5254L69.3105 61.3562L69.3063 61.3602L48.0002 82.6666L26.7004 61.3672L26.6895 61.3564L34.5355 53.5322Z" fill="white"/>
+      <path d="M82.6674 48.0007L74.8327 55.8353L66.9981 48.0007L74.8327 40.166L82.6674 48.0007Z" fill="white"/>
+      <path d="M55.9466 47.996H55.9502L47.9999 40.0456L40.0457 47.9998L40.0565 48.0109L47.9999 55.9543L55.9539 47.9998L55.9466 47.996Z" fill="white"/>
+    </svg>
+    <h1 class="title-xl text-center">BNB Dev Suite</h1>
+    <p class="subtitle text-center" style="max-width:580px">
+      The official AI plugin for BNB Chain.<br>
+      One URL. Every AI tool. Perfect branding.
+    </p>
+    <div style="margin-top:36px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center">
+      <span class="badge badge-yellow">MCP Server</span>
+      <span class="badge badge-yellow">Brand Assets</span>
+      <span class="badge badge-yellow">Smart Contracts</span>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 2: The Problem ==================== -->
+  <div class="slide" data-slide="1">
+    <span class="badge badge-red">The Problem</span>
+    <h2 class="title-lg text-center">AI is building on BNB Chain.<br>But it's <span class="red">guessing</span> your brand.</h2>
+    <div class="grid-3" style="margin-top:32px">
+      <div class="card">
+        <h3 class="red">Wrong Colors</h3>
+        <p>Ask 5 AI tools for "BNB yellow" &mdash; get 5 different hex codes. None are <span class="mono yellow">#F0B90B</span>.</p>
+        <div class="swatch-row" style="margin-top:14px">
+          <div class="swatch" style="background:#FFD700"></div>
+          <div class="swatch" style="background:#FFC107"></div>
+          <div class="swatch" style="background:#F5A623"></div>
+          <div class="swatch" style="background:#FFB300"></div>
+          <div class="swatch" style="background:#F0B90B;outline:2px solid var(--success);outline-offset:2px"></div>
+        </div>
+        <p class="dim" style="font-size:11px;margin-top:6px">Only the last one is correct</p>
+      </div>
+      <div class="card">
+        <h3 class="red">Made-up Logos</h3>
+        <p>AI describes a "golden diamond shape" or generates hallucinated SVG paths. No access to the actual file.</p>
+        <div style="margin-top:14px;color:var(--text-3);font-size:12px;font-family:'JetBrains Mono'">
+          &lt;svg&gt;...guessed paths...&lt;/svg&gt;<br>
+          <span class="red">// Not the official logo</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3 class="red">Unsafe Contracts</h3>
+        <p>AI-generated Solidity often uses wrong chain IDs, missing security patterns, or outdated imports.</p>
+        <div style="margin-top:14px;color:var(--text-3);font-size:12px;font-family:'JetBrains Mono'">
+          chainId: <span class="red">1</span> <span class="red">// Wrong!</span><br>
+          <span class="dim">// Should be 56 (BSC)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 3: Why It Matters ==================== -->
+  <div class="slide" data-slide="2">
+    <span class="badge badge-red">Why It Matters</span>
+    <h2 class="title-lg text-center">Brand inconsistency<br>at <span class="yellow">AI scale</span></h2>
+    <p class="subtitle text-center" style="margin-top:8px">
+      Every wrong color, hallucinated logo, and insecure contract template<br>gets multiplied across thousands of AI-generated projects.
+    </p>
+    <div class="grid-3" style="margin-top:44px">
+      <div class="stat">
+        <div class="stat-number">4,000+</div>
+        <div class="stat-label">Active BNB Chain developers</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">70%</div>
+        <div class="stat-label">of developers now use AI coding tools</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">&infin;</div>
+        <div class="stat-label">Wrong brand outputs without a source of truth</div>
+      </div>
+    </div>
+    <div class="emphasis">
+      The more AI is used to build, the more <strong>brand accuracy at the source</strong> matters.
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 4: The Solution ==================== -->
+  <div class="slide" data-slide="3">
+    <span class="badge badge-green">The Solution</span>
+    <h2 class="title-lg text-center">BNB Dev Suite</h2>
+    <p class="subtitle text-center">
+      An official plugin that gives any AI tool<br>direct access to BNB Chain brand assets.
+    </p>
+    <div class="grid-4" style="margin-top:32px">
+      <div class="card-accent pulse">
+        <div class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M15.5 8.5 12 12m-3.5 3.5L12 12m0 0 6 6M12 12l-6-6"/></svg></div>
+        <h3>Brand Colors</h3>
+        <p>Full color system, CSS variables, Tailwind config, typography.</p>
+      </div>
+      <div class="card-accent pulse" style="animation-delay:0.5s">
+        <div class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8m-4-4h8"/></svg></div>
+        <h3>Official Logos</h3>
+        <p>SVG logo files with usage guidelines. 4 variants.</p>
+      </div>
+      <div class="card-accent pulse" style="animation-delay:1s">
+        <div class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="m9 15 2 2 4-4"/></svg></div>
+        <h3>Contracts</h3>
+        <p>Production-ready BEP20 &amp; BEP721 with Hardhat for BSC.</p>
+      </div>
+      <div class="card-accent pulse" style="animation-delay:1.5s">
+        <div class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m9 10 2 2 4-4"/><path d="M2 8h20"/></svg></div>
+        <h3>Components</h3>
+        <p>React ConnectWallet &amp; NetworkSwitcher, pre-styled.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 5: What is MCP ==================== -->
+  <div class="slide" data-slide="4">
+    <span class="badge badge-blue">Key Concept</span>
+    <h2 class="title-lg text-center">What is MCP?</h2>
+    <p class="subtitle text-center">Model Context Protocol &mdash; a universal standard for AI plugins.</p>
+    <div class="grid-2" style="margin-top:36px; max-width:860px">
+      <div class="card" style="text-align:center;background:var(--bg-2)">
+        <p class="dim" style="font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">Before MCP</p>
+        <div style="display:flex;justify-content:center;gap:12px;margin-bottom:14px">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#8C8F9B" stroke-width="1.5"><path d="M4 20h4l10.5-10.5a2.121 2.121 0 0 0-3-3L5 17v3Z"/><path d="m13.5 6.5 3 3"/></svg>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#8C8F9B" stroke-width="1.5"><path d="M4 20h4l10.5-10.5a2.121 2.121 0 0 0-3-3L5 17v3Z"/><path d="m13.5 6.5 3 3"/></svg>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#8C8F9B" stroke-width="1.5"><path d="M4 20h4l10.5-10.5a2.121 2.121 0 0 0-3-3L5 17v3Z"/><path d="m13.5 6.5 3 3"/></svg>
+        </div>
+        <p style="font-size:15px">Different tool for every platform.</p>
+        <p class="dim" style="margin-top:6px;font-size:13px">Custom integration for each AI tool.</p>
+      </div>
+      <div class="card-accent" style="text-align:center">
+        <p style="color:#B8860B;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">With MCP</p>
+        <div style="display:flex;justify-content:center;margin-bottom:14px">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-5"/></svg>
+        </div>
+        <p style="font-size:15px"><strong>One standard.</strong> Works everywhere.</p>
+        <p class="dim" style="margin-top:6px;font-size:13px">One plugin &rarr; Claude, Cursor, Windsurf, Copilot...</p>
+      </div>
+    </div>
+    <div class="emphasis">
+      <strong>MCP is USB for AI.</strong> Build one plugin, every AI tool can use it.
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 6: How It Works ==================== -->
+  <div class="slide" data-slide="5">
+    <span class="badge badge-yellow">How It Works</span>
+    <h2 class="title-lg text-center">Three steps. That's it.</h2>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="step-label">Step 1</div>
+        <div class="step-text">Add URL</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step highlight">
+        <div class="step-label">Step 2</div>
+        <div class="step-text">AI calls tools</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step">
+        <div class="step-label">Step 3</div>
+        <div class="step-text">Perfect output</div>
+      </div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="terminal-dot" style="background:#EF2A37"></div>
+        <div class="terminal-dot" style="background:#F0B90B"></div>
+        <div class="terminal-dot" style="background:#15C16E"></div>
+      </div>
+      <div class="terminal-body">
+        <span class="t-dim">$</span> <span class="t-yellow">claude mcp add</span> bnb-dev-suite https://bnb-dev-suite.vercel.app/api/mcp<br><br>
+        <span class="t-green">&#10003; Added MCP server "bnb-dev-suite"</span><br><br>
+        <span class="t-dim">$</span> <span class="t-yellow">claude</span><br>
+        <span class="t-dim">&gt;</span> Build me a BNB Chain DApp with wallet connect<br><br>
+        <span class="t-dim" style="font-size:11px">Claude calls get_brand_colors, get_logo, get_ui_component...</span><br>
+        <span class="t-green">&#10003; Generated 12 files with official BNB branding</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 7: Before vs After ==================== -->
+  <div class="slide" data-slide="6">
+    <span class="badge badge-yellow">The Difference</span>
+    <h2 class="title-lg text-center" style="margin-bottom:28px">Without vs With BNB Dev Suite</h2>
+    <div class="grid-2 grid-2-vs" style="max-width:960px">
+      <div class="vs-label">VS</div>
+      <div class="compare-box compare-bad">
+        <h3><span class="icon red">&#10007;</span> <span class="red">Without</span> &mdash; AI guesses</h3>
+        <div class="compare-item"><span class="icon red">&#10007;</span><span>Primary color: <code class="red">#FFD700</code> (wrong)</span></div>
+        <div class="compare-item"><span class="icon red">&#10007;</span><span>Logo: text description, no file</span></div>
+        <div class="compare-item"><span class="icon red">&#10007;</span><span>Contract: generic ERC20, chainId: 1</span></div>
+        <div class="compare-item"><span class="icon red">&#10007;</span><span>Font: Arial or system default</span></div>
+        <div class="compare-item"><span class="icon red">&#10007;</span><span>Dark mode: no brand-specific palette</span></div>
+        <div class="compare-item"><span class="icon red">&#10007;</span><span>Every project looks different</span></div>
+      </div>
+      <div class="compare-box compare-good">
+        <h3><span class="icon green">&#10003;</span> <span class="green">With</span> &mdash; AI knows</h3>
+        <div class="compare-item"><span class="icon green">&#10003;</span><span>Primary color: <code class="yellow">#F0B90B</code> (official)</span></div>
+        <div class="compare-item"><span class="icon green">&#10003;</span><span>Logo: actual SVG + usage guidelines</span></div>
+        <div class="compare-item"><span class="icon green">&#10003;</span><span>Contract: audited BEP20, chainId: 56</span></div>
+        <div class="compare-item"><span class="icon green">&#10003;</span><span>Font: Space Grotesk + Inter (official)</span></div>
+        <div class="compare-item"><span class="icon green">&#10003;</span><span>Dark mode: full BNB dark palette</span></div>
+        <div class="compare-item"><span class="icon green">&#10003;</span><span>Every project is brand-consistent</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 8: Q&A Intro ==================== -->
+  <div class="slide" data-slide="7">
+    <div class="cover-bg"></div>
+    <span class="badge badge-yellow">Tough Questions</span>
+    <h2 class="title-xl text-center">But wait...</h2>
+    <p class="subtitle text-center">Let's address what you're probably thinking.</p>
+  </div>
+
+  <!-- ==================== SLIDE 9: Q1 ==================== -->
+  <div class="slide" data-slide="8">
+    <span class="badge badge-red">Question 1</span>
+    <div class="qa-question">Can't AI just search the web for BNB brand guidelines?</div>
+    <div class="divider" style="margin:0 auto"></div>
+    <div class="qa-answer" style="margin-top:20px">
+      AI coding tools don't browse the web while writing code. They rely on training data &mdash; <strong>outdated, incomplete, and often wrong</strong>.
+      <br><br>
+      Even with web search, the AI gets unstructured HTML. It has to <strong>guess</strong> which hex code is the primary yellow, which font is for headings, which logo file is current.
+      <br><br>
+      MCP gives AI <strong>structured, typed, versioned data</strong> &mdash; not a webpage to interpret.
+    </div>
+    <div class="emphasis">
+      Web search = AI reads a blog post and guesses.<br>
+      MCP = AI calls an API and <strong>knows</strong>.
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 10: Q2 ==================== -->
+  <div class="slide" data-slide="9">
+    <span class="badge badge-red">Question 2</span>
+    <div class="qa-question">Why MCP? Why not just a REST API?</div>
+    <div class="divider" style="margin:0 auto"></div>
+    <div class="qa-answer" style="margin-top:20px">
+      A REST API needs <strong>custom integration in every AI tool</strong> &mdash; separate plugins for Claude, Cursor, Windsurf, Copilot.
+      <br><br>
+      MCP is a <strong>universal standard</strong>. Build once &rarr; works in every AI tool that supports it.
+    </div>
+    <div class="grid-3" style="margin-top:28px;max-width:780px">
+      <div class="stat">
+        <div class="stat-number" style="font-size:34px">17,000+</div>
+        <div class="stat-label">MCP servers on Smithery</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number" style="font-size:34px">6+</div>
+        <div class="stat-label">Major AI tools with MCP</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number" style="font-size:34px">97M+</div>
+        <div class="stat-label">Monthly SDK downloads</div>
+      </div>
+    </div>
+    <div class="emphasis">
+      Backed by Anthropic. Adopted by Microsoft, Stripe, AWS, Figma, and more.
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 11: Q3 ==================== -->
+  <div class="slide" data-slide="10">
+    <span class="badge badge-red">Question 3</span>
+    <div class="qa-question">Isn't this just documentation in a different format?</div>
+    <div class="divider" style="margin:0 auto"></div>
+    <div class="qa-answer" style="margin-top:20px">
+      Documentation is for <strong>humans</strong>. MCP is for <strong>AI agents</strong>.
+    </div>
+    <div class="grid-2" style="margin-top:28px;max-width:860px">
+      <div class="card" style="text-align:center;background:var(--bg-2)">
+        <p class="dim" style="font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Documentation</p>
+        <p style="font-size:14px;line-height:1.7;color:var(--text-2)">
+          "Our primary brand color is BNB Yellow. Please use hex code #F0B90B for primary actions..."
+        </p>
+        <p class="dim" style="margin-top:14px;font-size:12px">Human reads &rarr; human applies &rarr; human might get it wrong</p>
+      </div>
+      <div class="card-accent" style="text-align:center">
+        <p style="color:#B8860B;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">MCP Tool</p>
+        <div style="font-family:'JetBrains Mono';font-size:12px;text-align:left;background:white;padding:12px 14px;border-radius:8px;line-height:1.7;border:1px solid var(--border)">
+          <span class="dim">{</span><br>
+          &nbsp;&nbsp;<span style="color:#B8860B">"primary"</span>: <span class="green">"#F0B90B"</span>,<br>
+          &nbsp;&nbsp;<span style="color:#B8860B">"css"</span>: <span class="green">"--bnb-yellow: ..."</span>,<br>
+          &nbsp;&nbsp;<span style="color:#B8860B">"tailwind"</span>: <span class="green">{ ... }</span><br>
+          <span class="dim">}</span>
+        </div>
+        <p class="green" style="margin-top:14px;font-size:12px">AI calls &rarr; gets exact data &rarr; zero errors</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 12: Q4 ==================== -->
+  <div class="slide" data-slide="11">
+    <span class="badge badge-red">Question 4</span>
+    <div class="qa-question">How do you get developers to actually use this?</div>
+    <div class="divider" style="margin:0 auto"></div>
+    <div class="qa-answer" style="margin-top:20px">Three distribution channels, zero friction:</div>
+    <div class="grid-3" style="margin-top:28px;max-width:880px">
+      <div class="card-accent" style="text-align:center">
+        <div style="display:flex;justify-content:center;margin-bottom:10px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"/></svg></div>
+        <h3>BNBChain.org</h3>
+        <p>Button on official dev portal. Copy URL or deep-link to Claude/Cursor.</p>
+      </div>
+      <div class="card-accent" style="text-align:center">
+        <div style="display:flex;justify-content:center;margin-bottom:10px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
+        <h3>MCP Registries</h3>
+        <p>Listed on Smithery &amp; mcp.run. Search "BNB" &rarr; one-click install.</p>
+      </div>
+      <div class="card-accent" style="text-align:center">
+        <div style="display:flex;justify-content:center;margin-bottom:10px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 6 9 6 9Zm12 0h1.5a2.5 2.5 0 0 0 0-5C17 4 18 9 18 9ZM4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22m7-7.34V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></div>
+        <h3>Hackathons</h3>
+        <p>Pre-installed in starter kits. Default tool for BNB hackathons.</p>
+      </div>
+    </div>
+    <div class="emphasis">
+      Developers don't "discover" it &mdash; <strong>it's already there when they start.</strong>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 13: Q5 ==================== -->
+  <div class="slide" data-slide="12">
+    <span class="badge badge-red">Question 5</span>
+    <div class="qa-question">Why is BNB Chain the right chain to do this first?</div>
+    <div class="divider" style="margin:0 auto"></div>
+    <div class="qa-answer" style="margin-top:20px">
+      BNB Chain already leads in developer tooling, hackathon support, and ecosystem funding.<br>
+      <strong>Being the first blockchain with an official AI plugin is a natural next step.</strong>
+    </div>
+    <div class="grid-3" style="margin-top:28px;max-width:780px">
+      <div class="stat">
+        <div class="stat-number" style="font-size:34px">$1B</div>
+        <div class="stat-label">Builder Fund for developers</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number" style="font-size:34px">26M</div>
+        <div class="stat-label">Daily transactions on BSC</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number" style="font-size:34px">600+</div>
+        <div class="stat-label">Builders in recent hackathons</div>
+      </div>
+    </div>
+    <div class="emphasis" style="margin-top:28px">
+      AWS, Stripe, Figma, GitHub all have MCP servers. No blockchain does yet.<br>
+      <strong>BNB Chain gets there first.</strong>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 14: Architecture ==================== -->
+  <div class="slide" data-slide="13">
+    <span class="badge badge-yellow">Architecture</span>
+    <h2 class="title-lg text-center">Simple. Deployable. Scalable.</h2>
+    <div class="flow" style="margin-top:36px">
+      <div class="flow-step">
+        <div class="step-label">Developer</div>
+        <div class="step-text">Claude / Cursor / Any AI</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step highlight">
+        <div class="step-label">MCP Protocol</div>
+        <div class="step-text">bnbchain.org/mcp</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step">
+        <div class="step-label">BNB Dev Suite</div>
+        <div class="step-text">4 Official Tools</div>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:36px;max-width:860px">
+      <div class="card">
+        <h3>Deployment</h3>
+        <ul class="feature-list" style="margin-top:10px">
+          <li><span class="bullet"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0B90B" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg></span> Deployed on Vercel alongside the web UI</li>
+          <li><span class="bullet"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0B90B" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg></span> Stateless &mdash; scales to zero, no servers</li>
+          <li><span class="bullet"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0B90B" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg></span> Can live under any domain (bnbchain.org/mcp)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Compatibility</h3>
+        <ul class="feature-list" style="margin-top:10px">
+          <li><span class="bullet"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0B90B" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg></span> HTTP mode: remote URL for any MCP client</li>
+          <li><span class="bullet"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0B90B" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg></span> Stdio mode: local npm package for power users</li>
+          <li><span class="bullet"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0B90B" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg></span> Web UI for non-AI workflows</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 15: Vision ==================== -->
+  <div class="slide" data-slide="14">
+    <div class="cover-bg"></div>
+    <span class="badge badge-yellow">Vision</span>
+    <h2 class="title-xl text-center">BNB Chain is the first blockchain<br>with an official <span class="yellow">AI plugin</span>.</h2>
+    <p class="subtitle text-center" style="margin-top:14px">
+      With the largest developer ecosystem in Web3 and a $1B Builder Fund,<br>BNB Chain is already the best place to build. Now it's also the easiest.
+    </p>
+    <div class="emphasis" style="margin-top:36px;max-width:780px">
+      AI is becoming the primary interface for building software.<br>
+      BNB Dev Suite makes <strong>BNB Chain the default choice</strong> for every AI-powered developer.
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 16: CTA ==================== -->
+  <div class="slide" data-slide="15">
+    <div class="cover-bg"></div>
+    <svg class="logo-mark" viewBox="0 0 96 96" fill="none" style="width:48px;height:48px">
+      <circle cx="48" cy="48" r="48" fill="#F0B90B"/>
+      <path d="M34.5355 42.4676L48.0002 29.0032L61.4717 42.4747L69.3063 34.6397L48.0002 13.3333L26.7007 34.6328L34.5355 42.4676Z" fill="white"/>
+      <path d="M21.1683 40.1646L29.003 47.9993L21.1679 55.8344L13.3333 47.9997L21.1683 40.1646Z" fill="white"/>
+      <path d="M34.5355 53.5322L48.0002 66.9962L61.4714 53.5254L69.3105 61.3562L69.3063 61.3602L48.0002 82.6666L26.7004 61.3672L26.6895 61.3564L34.5355 53.5322Z" fill="white"/>
+      <path d="M82.6674 48.0007L74.8327 55.8353L66.9981 48.0007L74.8327 40.166L82.6674 48.0007Z" fill="white"/>
+      <path d="M55.9466 47.996H55.9502L47.9999 40.0456L40.0457 47.9998L40.0565 48.0109L47.9999 55.9543L55.9539 47.9998L55.9466 47.996Z" fill="white"/>
+    </svg>
+    <h2 class="title-lg text-center" style="margin-top:8px">Try it now</h2>
+    <div class="terminal" style="margin-top:24px;max-width:560px">
+      <div class="terminal-bar">
+        <div class="terminal-dot" style="background:#EF2A37"></div>
+        <div class="terminal-dot" style="background:#F0B90B"></div>
+        <div class="terminal-dot" style="background:#15C16E"></div>
+      </div>
+      <div class="terminal-body">
+        <span class="t-yellow">claude mcp add</span> bnb-dev-suite \<br>
+        &nbsp;&nbsp;https://bnb-dev-suite.vercel.app/api/mcp
+      </div>
+    </div>
+    <div style="margin-top:36px;display:flex;gap:28px;flex-wrap:wrap;justify-content:center">
+      <div style="text-align:center">
+        <p class="dim" style="font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Web UI</p>
+        <p class="mono" style="font-size:13px;color:var(--yellow)">bnb-dev-suite.vercel.app</p>
+      </div>
+      <div style="text-align:center">
+        <p class="dim" style="font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">MCP Endpoint</p>
+        <p class="mono" style="font-size:13px;color:var(--yellow)">bnb-dev-suite.vercel.app/api/mcp</p>
+      </div>
+      <div style="text-align:center">
+        <p class="dim" style="font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">npm</p>
+        <p class="mono" style="font-size:13px;color:var(--yellow)">npx bnb-dev-suite</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="nav" id="nav"></div>
+<div class="slide-number" id="slideNumber">1 / 16</div>
+<div class="key-hint">&larr; &rarr; to navigate</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const nav = document.getElementById('nav');
+  const slideNumber = document.getElementById('slideNumber');
+  let current = 0;
+
+  // Create nav dots
+  slides.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goTo(i));
+    nav.appendChild(dot);
+  });
+
+  function goTo(index) {
+    if (index < 0 || index >= slides.length || index === current) return;
+
+    const direction = index > current ? 1 : -1;
+    const leaving = slides[current];
+    const entering = slides[index];
+
+    // 1. Place entering slide off-screen instantly (no transition)
+    entering.style.transition = 'none';
+    entering.style.transform = `translateX(${direction * 50}px)`;
+    entering.style.opacity = '0';
+    entering.offsetHeight; // force reflow
+
+    // 2. Enable transitions on both slides
+    entering.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    leaving.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+
+    // 3. Animate leaving slide out
+    leaving.classList.remove('active');
+    leaving.style.transform = `translateX(${-direction * 50}px)`;
+    leaving.style.opacity = '0';
+
+    // 4. Animate entering slide in
+    entering.classList.add('active');
+    entering.style.transform = 'translateX(0)';
+    entering.style.opacity = '1';
+
+    // 5. Clean up all inline styles after animation
+    setTimeout(() => {
+      leaving.style.cssText = '';
+      entering.style.cssText = '';
+    }, 350);
+
+    current = index;
+
+    document.querySelectorAll('.nav-dot').forEach((dot, i) => {
+      dot.classList.toggle('active', i === current);
+    });
+    slideNumber.textContent = `${current + 1} / ${slides.length}`;
+  }
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      goTo(current + 1);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      goTo(current - 1);
+    } else if (e.key === 'Home') {
+      goTo(0);
+    } else if (e.key === 'End') {
+      goTo(slides.length - 1);
+    }
+  });
+
+  // Touch swipe
+  let touchStartX = 0;
+  document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', (e) => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 60) goTo(current + (diff > 0 ? 1 : -1));
+  });
+</script>
+</body>
+</html>

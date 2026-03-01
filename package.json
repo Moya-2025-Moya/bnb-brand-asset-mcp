@@ -5,6 +5,7 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "npm run dev --workspace=frontend",
     "build": "npm run build --workspaces",
     "dev:frontend": "npm run dev --workspace=frontend",
     "build:mcp": "npm run build --workspace=bnb-dev-suite",

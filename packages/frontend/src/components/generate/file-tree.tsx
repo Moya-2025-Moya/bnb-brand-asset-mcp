@@ -40,6 +40,28 @@ function buildTree(paths: string[]): TreeNode[] {
   return root;
 }
 
+function getFileIconColor(filename: string): string {
+  const ext = filename.split(".").pop()?.toLowerCase();
+  switch (ext) {
+    case "tsx":
+    case "ts":
+      return "text-blue-400";
+    case "sol":
+      return "text-purple-400";
+    case "css":
+      return "text-pink-400";
+    case "json":
+      return "text-yellow-400";
+    case "md":
+      return "text-gray-400";
+    case "js":
+    case "jsx":
+      return "text-yellow-300";
+    default:
+      return "text-muted-foreground";
+  }
+}
+
 function TreeItem({
   node,
   onSelect,
@@ -58,12 +80,12 @@ function TreeItem({
     return (
       <button
         onClick={() => onSelect(node.path)}
-        className={`flex items-center gap-1.5 w-full text-left px-2 py-1 text-sm rounded hover:bg-muted/50 transition-colors ${
+        className={`flex items-center gap-1.5 w-full text-left px-2 py-1 text-sm rounded hover:bg-muted/50 transition-colors animate-in fade-in duration-300 fill-mode-both ${
           isSelected ? "bg-primary/10 text-primary" : "text-muted-foreground"
         }`}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
       >
-        <File className="h-3.5 w-3.5 shrink-0" />
+        <File className={`h-3.5 w-3.5 shrink-0 ${getFileIconColor(node.name)}`} />
         <span className="truncate font-mono text-xs">{node.name}</span>
       </button>
     );

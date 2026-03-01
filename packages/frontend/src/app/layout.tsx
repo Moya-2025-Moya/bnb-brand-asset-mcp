@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "BNB Dev Suite - Brand Asset Toolkit for BNB Chain",
   description:
-    "Generate branded BNB Chain projects in 30 seconds. Official brand colors, logos, smart contract templates, and UI components via MCP.",
+    "Build brand-perfect BNB Chain projects with AI. Official brand colors, logos, smart contract templates, and UI components via MCP.",
 };
 
 export default function RootLayout({
@@ -31,9 +31,7 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
+          defaultTheme="light"
         >
           {children}
         </ThemeProvider>

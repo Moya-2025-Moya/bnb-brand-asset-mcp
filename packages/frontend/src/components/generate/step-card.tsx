@@ -12,9 +12,15 @@ interface StepCardProps {
 export function StepCard({ step }: StepCardProps) {
   const { type, data } = step;
 
+  const wrapper = (children: React.ReactNode) => (
+    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both">
+      {children}
+    </div>
+  );
+
   if (type === "tool_call") {
     const { name, input } = data as { id: string; name: string; input: Record<string, unknown> };
-    return (
+    return wrapper(
       <Card className="border-primary/20">
         <CardContent className="p-3">
           <div className="flex items-start gap-2">
@@ -37,7 +43,7 @@ export function StepCard({ step }: StepCardProps) {
 
   if (type === "tool_result") {
     const { name } = data as { id: string; name: string; result: string };
-    return (
+    return wrapper(
       <Card className="border-bnb-success/20">
         <CardContent className="p-3">
           <div className="flex items-center gap-2">
@@ -53,7 +59,7 @@ export function StepCard({ step }: StepCardProps) {
 
   if (type === "file") {
     const { path } = data as { path: string; content: string; language: string };
-    return (
+    return wrapper(
       <Card className="border-primary/20">
         <CardContent className="p-3">
           <div className="flex items-center gap-2">
@@ -68,7 +74,7 @@ export function StepCard({ step }: StepCardProps) {
   if (type === "text") {
     const { content } = data as { content: string };
     if (!content) return null;
-    return (
+    return wrapper(
       <Card>
         <CardContent className="p-3">
           <div className="flex items-start gap-2">
@@ -82,7 +88,7 @@ export function StepCard({ step }: StepCardProps) {
 
   if (type === "error") {
     const { message } = data as { message: string };
-    return (
+    return wrapper(
       <Card className="border-destructive/30">
         <CardContent className="p-3">
           <div className="flex items-center gap-2">

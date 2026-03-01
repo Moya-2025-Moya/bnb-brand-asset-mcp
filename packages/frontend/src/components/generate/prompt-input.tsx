@@ -49,7 +49,7 @@ export function PromptInput({
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        Press Cmd+Enter to send
+        Press <kbd className="kbd">⌘</kbd> + <kbd className="kbd">Enter</kbd> to send
       </p>
     </div>
   );

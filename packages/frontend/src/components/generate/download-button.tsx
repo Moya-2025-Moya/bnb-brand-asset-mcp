@@ -16,8 +16,12 @@ export function DownloadButton({ files }: DownloadButtonProps) {
   };
 
   return (
-    <Button onClick={handleDownload} className="gap-2" disabled={files.length === 0}>
-      <Download className="h-4 w-4" />
+    <Button
+      onClick={handleDownload}
+      className="gap-2 download-glow text-bnb-black font-semibold border-0 group"
+      disabled={files.length === 0}
+    >
+      <Download className="h-4 w-4 group-hover:-translate-y-0.5 transition-transform" />
       Download Project ({files.length} files)
     </Button>
   );
