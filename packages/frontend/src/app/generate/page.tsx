@@ -95,8 +95,8 @@ function LogLine({ step }: { step: GenerationStep }) {
 }
 
 export default function GeneratePage() {
-  const [apiKey, setApiKey] = useLocalStorage("bnb-dev-suite-api-key", "");
-  const [maxTokens, setMaxTokens] = useLocalStorage("bnb-dev-suite-max-tokens", "16384");
+  const [apiKey, setApiKey] = useLocalStorage("bnb-brandclaw-api-key", "");
+  const [maxTokens, setMaxTokens] = useLocalStorage("bnb-brandclaw-max-tokens", "16384");
   const [prompt, setPrompt] = useState("");
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null);

@@ -11,7 +11,7 @@ export function Header() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2">
           <Image src="/bnb-logo.svg" alt="BNB Chain" width={34} height={34} />
-          <span className="text-lg font-bold">BNB Dev Suite</span>
+          <span className="text-lg font-bold">BNB BrandClaw</span>
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />

@@ -14,7 +14,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BNB Dev Suite - Brand Asset Toolkit for BNB Chain",
+  title: "BNB BrandClaw - Brand Asset Toolkit for BNB Chain",
   description:
     "Build brand-perfect BNB Chain projects with AI. Official brand colors, logos, smart contract templates, and UI components via MCP.",
 };

@@ -1,10 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
-import { registerTools } from "bnb-dev-suite";
+import { registerTools } from "bnb-brandclaw";
 
 function createMcpServer() {
   const server = new McpServer({
-    name: "bnb-dev-suite",
+    name: "bnb-brandclaw",
     version: "1.0.0",
   });
   registerTools(server);

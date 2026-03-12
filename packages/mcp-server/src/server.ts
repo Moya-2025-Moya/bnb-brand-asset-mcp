@@ -3,7 +3,7 @@ import { registerTools } from "./tools/index.js";
 
 export function createServer() {
   const server = new McpServer({
-    name: "bnb-dev-suite",
+    name: "bnb-brandclaw",
     version: "1.0.0",
   });
 

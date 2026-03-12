@@ -69,7 +69,7 @@ export function Hero() {
   const [isTypingDone, setIsTypingDone] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const mcpCommand = "claude mcp add bnb-dev-suite https://bnb-dev-suite.vercel.app/api/mcp";
+  const mcpCommand = "claude mcp add bnb-brandclaw https://bnb-brandclaw.vercel.app/api/mcp";
   const handleCopy = () => {
     navigator.clipboard.writeText(mcpCommand);
     setCopied(true);
@@ -238,7 +238,7 @@ export function Hero() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground max-w-md text-center">
-              Click &quot;Add to Claude&quot; to copy the command, then paste it into your terminal to connect BNB Dev Suite MCP to Claude Code.
+              Click &quot;Add to Claude&quot; to copy the command, then paste it into your terminal to connect BNB BrandClaw MCP to Claude Code.
             </p>
           </div>
 
@@ -256,7 +256,7 @@ export function Hero() {
                   <div className="h-3 w-3 rounded-full bg-[#27C93F]" />
                 </div>
                 <span className="text-[11px] text-gray-500 font-mono tracking-wider uppercase">
-                  BNB Dev Suite — Terminal
+                  BNB BrandClaw — Terminal
                 </span>
                 <div className="flex items-center gap-1.5">
                   <div className="h-1.5 w-1.5 rounded-full bg-[#18DC7E] dot-live" />

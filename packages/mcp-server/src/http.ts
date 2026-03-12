@@ -22,7 +22,7 @@ const httpServer = createHttpServer(async (req, res) => {
   // Health check
   if (req.url === "/health") {
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ status: "ok", name: "bnb-dev-suite" }));
+    res.end(JSON.stringify({ status: "ok", name: "bnb-brandclaw" }));
     return;
   }
 
@@ -43,7 +43,7 @@ const httpServer = createHttpServer(async (req, res) => {
 });
 
 httpServer.listen(PORT, () => {
-  console.log(`BNB Dev Suite MCP Server (HTTP)`);
+  console.log(`BNB BrandClaw MCP Server (HTTP)`);
   console.log(`  MCP endpoint: http://localhost:${PORT}/mcp`);
   console.log(`  Health check: http://localhost:${PORT}/health`);
 });

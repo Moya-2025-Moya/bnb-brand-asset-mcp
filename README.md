@@ -1,4 +1,4 @@
-# BNB Dev Suite
+# BNB BrandClaw
 
 > Brand Asset MCP Server + AI Project Generator for BNB Chain
 
@@ -6,9 +6,9 @@
 
 ## What is this?
 
-BNB Dev Suite fills the brand asset gap in the BNB Chain developer ecosystem. While `bnbchain-mcp` handles on-chain operations and `Ask AI MCP` covers documentation, **no tool existed for official brand assets**. This project provides:
+BNB BrandClaw fills the brand asset gap in the BNB Chain developer ecosystem. While `bnbchain-mcp` handles on-chain operations and `Ask AI MCP` covers documentation, **no tool existed for official brand assets**. This project provides:
 
-1. **MCP Server** (`bnb-dev-suite`) — 4 tools delivering official BNB Chain brand colors, logos, contract templates, and UI components to any MCP-compatible AI assistant
+1. **MCP Server** (`bnb-brandclaw`) — 4 tools delivering official BNB Chain brand colors, logos, contract templates, and UI components to any MCP-compatible AI assistant
 2. **Frontend Demo** — A web app that uses Claude's agentic loop to generate complete branded BNB Chain projects in 30 seconds
 
 ## Quick Start
@@ -20,9 +20,9 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
-    "bnb-dev-suite": {
+    "bnb-brandclaw": {
       "command": "npx",
-      "args": ["-y", "bnb-dev-suite"]
+      "args": ["-y", "bnb-brandclaw"]
     }
   }
 }
@@ -55,7 +55,7 @@ Open `http://localhost:3000`, enter your Claude API key, and generate a project.
 ```
 bnb-brand-asset-mcp/              (monorepo, npm workspaces)
 ├── packages/
-│   ├── mcp-server/               (npm: bnb-dev-suite)
+│   ├── mcp-server/               (npm: bnb-brandclaw)
 │   │   ├── src/
 │   │   │   ├── index.ts          (CLI entry, stdio transport)
 │   │   │   ├── server.ts         (McpServer + tool registration)
@@ -97,7 +97,7 @@ bnb-brand-asset-mcp/              (monorepo, npm workspaces)
 |-------|------|---------|
 | On-chain | `bnbchain-mcp` | Blockchain operations, queries |
 | Documentation | `Ask AI MCP` | BNB Chain docs Q&A |
-| **Brand Assets** | **`bnb-dev-suite`** | **Brand colors, logos, templates, UI** |
+| **Brand Assets** | **`bnb-brandclaw`** | **Brand colors, logos, templates, UI** |
 
 ## License
 

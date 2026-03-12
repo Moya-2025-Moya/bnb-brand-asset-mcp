@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  transpilePackages: ["bnb-dev-suite"],
+  transpilePackages: ["bnb-brandclaw"],
   serverExternalPackages: ["shiki"],
 };
 

@@ -467,7 +467,7 @@ export function CompletionView({ files, steps, totalTools, prompt }: CompletionV
         {/* Powered by */}
         <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
           <Image src="/bnb-logo.svg" alt="BNB" width={16} height={16} />
-          <span>Powered by <span className="text-[#F0B90B] font-medium">BNB Dev Suite MCP</span></span>
+          <span>Powered by <span className="text-[#F0B90B] font-medium">BNB BrandClaw MCP</span></span>
         </div>
       </section>
     </div>

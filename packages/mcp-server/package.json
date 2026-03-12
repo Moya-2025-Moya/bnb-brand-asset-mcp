@@ -1,10 +1,10 @@
 {
-  "name": "bnb-dev-suite",
+  "name": "bnb-brandclaw",
   "version": "1.0.0",
   "description": "BNB Chain Brand Asset MCP Server - Official brand colors, logos, contract templates, and UI components",
   "type": "module",
   "bin": {
-    "bnb-dev-suite": "./dist/index.js"
+    "bnb-brandclaw": "./dist/index.js"
   },
   "main": "./dist/server.js",
   "exports": {

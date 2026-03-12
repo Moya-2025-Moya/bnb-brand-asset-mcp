@@ -6,9 +6,9 @@ const steps = [
   {
     step: "1",
     title: "Install the MCP Server",
-    description: "Add bnb-dev-suite to your Claude Desktop config or use npx directly.",
+    description: "Add bnb-brandclaw to your Claude Desktop config or use npx directly.",
     code: [
-      { type: "key", text: '"bnb-dev-suite"' },
+      { type: "key", text: '"bnb-brandclaw"' },
       { type: "plain", text: ": {\n  " },
       { type: "key", text: '"command"' },
       { type: "plain", text: ": " },
@@ -18,7 +18,7 @@ const steps = [
       { type: "plain", text: ": [" },
       { type: "string", text: '"-y"' },
       { type: "plain", text: ", " },
-      { type: "string", text: '"bnb-dev-suite"' },
+      { type: "string", text: '"bnb-brandclaw"' },
       { type: "plain", text: "]\n}" },
     ],
   },

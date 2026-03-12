@@ -8,7 +8,7 @@ export function Footer() {
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
           <div className="flex items-center gap-2">
             <Image src="/bnb-logo.svg" alt="BNB Chain" width={20} height={20} />
-            <span className="font-semibold">BNB Dev Suite</span>
+            <span className="font-semibold">BNB BrandClaw</span>
           </div>
           <p className="text-sm text-muted-foreground">
             Built for the BNB Chain ecosystem. Open source MCP server for brand-consistent development.

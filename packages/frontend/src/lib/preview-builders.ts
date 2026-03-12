@@ -928,7 +928,7 @@ function buildFooterSection(): string {
       ${BNB_LOGO_SVG.replace(/width="28" height="28"/, 'width="16" height="16"')}
       Powered by <span style="color:#F0B90B;font-weight:500;">BNB Chain</span>
       <span style="color:#363C46;">|</span>
-      Built with <span style="color:#F0B90B;font-weight:500;">BNB Dev Suite</span>
+      Built with <span style="color:#F0B90B;font-weight:500;">BNB BrandClaw</span>
     </div>
   </footer>`;
 }

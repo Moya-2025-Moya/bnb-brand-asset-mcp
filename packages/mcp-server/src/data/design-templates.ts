@@ -95,7 +95,7 @@ const SHARED_FOOTER = `<footer style="background:#1E2329;color:#EAECEF;padding:5
         </div>
       </div>
       <div style="margin-top:24px;font-size:0.8rem;color:#5E6673;display:flex;justify-content:space-between;align-items:center;">
-        <span>Built on <span style="color:#F0B90B;font-weight:600;">BNB Chain</span> &mdash; Powered by BNB Dev Suite</span>
+        <span>Built on <span style="color:#F0B90B;font-weight:600;">BNB Chain</span> &mdash; Powered by BNB BrandClaw</span>
         <span>&copy; 2025 {{PROJECT_NAME}}</span>
       </div>
     </div>
